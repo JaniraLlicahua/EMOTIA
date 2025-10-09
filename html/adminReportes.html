@@ -4,13 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Admin - Emotia / Reportes</title>
+
+  <!-- Google Font -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- CSS -->
   <link rel="stylesheet" href="../css/adminRStyles.css">
-  <script src="https://kit.fontawesome.com/a2e0e9f5cc.js" crossorigin="anonymous"></script>
 </head>
 <body>
-  <div class="dashboard">
-    <!-- Sidebar -->
+  <div class="app-layout">
+    <!-- SIDEBAR -->
     <aside class="sidebar">
       <div class="brand">
         <img src="../pictures/logo-emotia.png" alt="Emotia" class="logo" title="EMOTIA">
@@ -19,8 +25,8 @@
 
       <nav class="nav">
         <a class="nav-item" href="adminPacientes.html" title="Pacientes"><i class="fa-solid fa-user-injured"></i> <span>Pacientes</span></a>
-        <a class="nav-item active" href="adminPsicologos.html" title="Psicólogos"><i class="fa-solid fa-user-tie"></i> <span>Psicólogos</span></a>
-        <a class="nav-item" href="adminReportes.html" title="Reportes"><i class="fa-solid  fa-chart-line"></i> <span>Reportes</span></a>
+        <a class="nav-item" href="adminPsicologos.html" title="Psicólogos"><i class="fa-solid fa-user-tie"></i> <span>Psicólogos</span></a>
+        <a class="nav-item active" href="adminReportes.html" title="Reportes"><i class="fa-solid fa-chart-line"></i> <span>Reportes</span></a>
       </nav>
 
       <div class="sidebar-footer">
@@ -28,27 +34,13 @@
       </div>
     </aside>
 
-    <!-- Contenido Principal -->
+    <!-- MAIN -->
     <main class="main">
-      <!-- Encabezado superior -->
+      <!-- TOPBAR -->
       <header class="topbar">
-        <label for="sidebar-toggle" class="toggle-btn" title="Mostrar / Ocultar menú">
-          <i class="fa-solid fa-bars"></i>
-        </label>
-
         <div class="breadcrumb">Lista de Reportes</div>
 
         <div class="top-actions">
-          <div class="search">
-            <input type="search" placeholder="Buscar reporte..." aria-label="Buscar reportes">
-            <i class="fa-solid fa-magnifying-glass"></i>
-          </div>
-
-          <div class="filter-date">
-            <input type="date" aria-label="Filtrar por fecha">
-            <i class="fa-solid fa-calendar-days"></i>
-          </div>
-
           <button class="icon-btn" title="Notificaciones"><i class="fa-regular fa-bell"></i></button>
           <button class="icon-btn" title="Mensajes"><i class="fa-regular fa-envelope"></i></button>
 
@@ -60,98 +52,135 @@
         </div>
       </header>
 
-      <!-- Sección de tarjetas resumen -->
-      <section class="cards-grid">
-        <div class="card stat">
-          <i class="fas fa-user-friends icon blue"></i>
-          <div>
-            <h3>25</h3>
-            <p>Pacientes Atendidos</p>
+      <!-- TABLA DE REPORTES (search + date + add están aquí) -->
+      <section class="table-section">
+        <div class="table-toolbar">
+          <div class="search-and-filter">
+            <div class="search">
+              <input type="search" placeholder="Buscar reporte..." aria-label="Buscar reportes">
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
+
+            <div class="filter-date">
+              <input type="date" aria-label="Filtrar por fecha">
+              <i class="fa-solid fa-calendar-days"></i>
+            </div>
+          </div>
+
+          <div class="toolbar-actions">
+            <button class="btn-primary"><i class="fa-solid fa-plus"></i> Agregar reporte</button>
           </div>
         </div>
-        <div class="card stat">
-          <i class="fas fa-user-md icon green"></i>
-          <div>
-            <h3>6</h3>
-            <p>Psicólogos Activos</p>
-          </div>
-        </div>
-        <div class="card stat">
-          <i class="fas fa-chart-line icon purple"></i>
-          <div>
-            <h3>78%</h3>
-            <p>Progreso Promedio</p>
-          </div>
-        </div>
-        <div class="card stat">
-          <i class="fas fa-star icon yellow"></i>
-          <div>
-            <h3>Laura G.</h3>
-            <p>Top Psicóloga</p>
-          </div>
+
+        <h2 class="section-title">Reportes Generados</h2>
+
+        <div class="table-responsive">
+          <table class="data-table" role="table" aria-label="Tabla de reportes">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Paciente</th>
+                <th>Psicólogo</th>
+                <th>Fecha</th>
+                <th>Progreso</th>
+                <th>Estado</th>
+                <th class="actions-col">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>01</td>
+                <td>José Ramos</td>
+                <td>Laura Gutiérrez</td>
+                <td>01/10/2025</td>
+                <td>85%</td>
+                <td><span class="status-dot approved" aria-hidden="true"></span> Aprobado</td>
+                <td class="actions-col">
+                  <button class="icon-btn"><i class="fa-solid fa-arrow-left" title="Historial"></i></button>
+                  <button class="icon-btn"><i class="fa-solid fa-pen-to-square" title="Editar"></i></button>
+                  <button class="icon-btn"><i class="fa-solid fa-trash" title="Eliminar"></i></button>
+                </td>
+              </tr>
+
+              <tr>
+                <td>02</td>
+                <td>María Torres</td>
+                <td>José Huamán</td>
+                <td>28/09/2025</td>
+                <td>70%</td>
+                <td><span class="status-dot warning" aria-hidden="true"></span> En revisión</td>
+                <td class="actions-col">
+                  <button class="icon-btn"><i class="fa-solid fa-arrow-left" title="Historial"></i></button>
+                  <button class="icon-btn"><i class="fa-solid fa-pen-to-square" title="Editar"></i></button>
+                  <button class="icon-btn"><i class="fa-solid fa-trash" title="Eliminar"></i></button>
+                </td>
+              </tr>
+
+              <tr>
+                <td>03</td>
+                <td>Emma García</td>
+                <td>Camila Torres</td>
+                <td>05/09/2025</td>
+                <td>40%</td>
+                <td><span class="status-dot danger" aria-hidden="true"></span> En Inicio</td>
+                <td class="actions-col">
+                  <button class="icon-btn"><i class="fa-solid fa-arrow-left" title="Historial"></i></button>
+                  <button class="icon-btn"><i class="fa-solid fa-pen-to-square" title="Editar"></i></button>
+                  <button class="icon-btn"><i class="fa-solid fa-trash" title="Eliminar"></i></button>
+                </td>
+              </tr>
+
+              <!-- agrega más filas según necesites -->
+            </tbody>
+          </table>
         </div>
       </section>
 
-      <!-- Sección de gráficos -->
+      <!-- DASHBOARD (cards arriba de gráficos, pero después de la tabla) -->
+      <section class="cards-grid">
+        <div class="card stat">
+          <div class="stat-info">
+            <h3>Pacientes Atendidos</h3>
+            <p class="stat-value">25</p>
+          </div>
+          <i class="fa-solid fa-user-friends stat-icon blue" aria-hidden="true"></i>
+        </div>
+
+        <div class="card stat">
+          <div class="stat-info">
+            <h3>Psicólogos Activos</h3>
+            <p class="stat-value">6</p>
+          </div>
+          <i class="fa-solid fa-user-md stat-icon green" aria-hidden="true"></i>
+        </div>
+
+        <div class="card stat">
+          <div class="stat-info">
+            <h3>Progreso Promedio</h3>
+            <p class="stat-value">78%</p>
+          </div>
+          <i class="fa-solid fa-chart-line stat-icon purple" aria-hidden="true"></i>
+        </div>
+
+        <div class="card stat">
+          <div class="stat-info">
+            <h3>Top Psicóloga</h3>
+            <p class="stat-value">Laura G.</p>
+          </div>
+          <i class="fa-solid fa-star stat-icon yellow" aria-hidden="true"></i>
+        </div>
+      </section>
+
       <section class="charts">
         <div class="chart-card">
           <h4>Progreso de Pacientes (Mensual)</h4>
-          <div class="chart-placeholder">[Gráfico de barras]</div>
+          <div class="chart-placeholder">[Contenedor para gráfico]</div>
         </div>
-        <div class="chart-card">
-          <h4>Distribución por Especialidad</h4>
-          <div class="chart-placeholder">[Gráfico circular]</div>
-        </div>
-        <div class="chart-card">
-          <h4>Sesiones Realizadas (Semanal)</h4>
-          <div class="chart-placeholder">[Gráfico de línea]</div>
-        </div>
-      </section>
 
-      <!-- Tabla de reportes -->
-      <section class="table-section">
-        <h2>Reportes Generados</h2>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Paciente</th>
-              <th>Psicólogo</th>
-              <th>Fecha</th>
-              <th>Progreso</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>01</td>
-              <td>José Ramos</td>
-              <td>Laura Gutiérrez</td>
-              <td>2025-10-01</td>
-              <td>85%</td>
-              <td><span class="status success">Aprobado</span></td>
-              <td>
-                <button class="btn small">Ver</button>
-                <button class="btn small edit">Editar</button>
-                <button class="btn small danger">Eliminar</button>
-              </td>
-            </tr>
-            <tr>
-              <td>02</td>
-              <td>María Torres</td>
-              <td>José Huamán</td>
-              <td>2025-09-28</td>
-              <td>70%</td>
-              <td><span class="status warning">En revisión</span></td>
-              <td>
-                <button class="btn small">Ver</button>
-                <button class="btn small edit">Editar</button>
-                <button class="btn small danger">Eliminar</button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="chart-card">
+          <h4>Psicólogos con Mejor Reputación</h4>
+          <div class="chart-placeholder">[Contenedor para gráfico]</div>
+        </div>
       </section>
     </main>
   </div>
