@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel Psicólogo</title>
+  <link rel="stylesheet" href="../css/psicoPStyles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <h2><span>PANEL</span><br>PSICOLOGO</h2>
+      <nav>
+        <ul>
+          <li class="active"><i class="fa-solid fa-users"></i> Lista de Pacientes</li>
+          <li><i class="fa-regular fa-heart"></i> Centro de Emociones</li>
+          <li><i class="fa-regular fa-comments"></i> Chat</li>
+          <li><i class="fa-regular fa-calendar-check"></i> Reuniones</li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Contenido Principal -->
+    <main class="main-content">
+      <header class="header">
+        <div class="breadcrumb">
+          <span class="current">Lista de Pacientes</span>
+        </div>
+        <div class="header-right">
+          <button class="icon-btn" title="Notificaciones"><i class="fa-regular fa-bell"></i></button>
+          <button class="icon-btn" title="Mensajes"><i class="fa-regular fa-envelope"></i></button>
+
+          <div class="user">
+            <img src="../pictures/user.png" alt="Usuario" class="avatar" title="img user">
+            <span class="username" title="usuario">Derek Alvarado</span>
+            <i class="fa-solid fa-caret-down small" title="ver más"></i>
+          </div>
+        </div>
+      </header>
+
+      <section class="content">
+        <div class="content-header">
+          <h1>Lista de Pacientes</h1>
+          <button class="add-btn"><i class="fa-solid fa-user-plus"></i> Nuevo Paciente</button>
+        </div>
+
+        <div class="table-container">
+          <div class="table-actions">
+            <div class="search-box">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" placeholder="Buscar paciente...">
+            </div>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Nombre Completo</th>
+                <th>Estado</th>
+                <th>Correo</th>
+                <th>Fecha de Nacimiento</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>Alyvia Kelley</td>
+                <td><span class="status approved"></span> En línea</td>
+                <td>a.kelley@gmail.com</td>
+                <td>18/06/1978</td>
+                <td class="actions">
+                  <button  title="Ver perfil"><i class="fa-solid fa-eye"></i></button>
+                  <button title="Editar"><i class="fa-solid fa-pen"></i></button>
+                  <button title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+                </td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>Jaiden Nixon</td>
+                <td><span class="status approved"></span> En línea</td>
+                <td>jaiden.n@gmail.com</td>
+                <td>30/09/1963</td>
+                <td class="actions">
+                  <button  title="Ver perfil"><i class="fa-solid fa-eye"></i></button>
+                  <button title="Editar"><i class="fa-solid fa-pen"></i></button>
+                  <button title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+                </td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>Ace Foley</td>
+                <td><span class="status blocked"></span> En sesión</td>
+                <td>ace.foley@yahoo.com</td>
+                <td>09/12/1985</td>
+                <td class="actions">
+                  <button  title="Ver perfil"><i class="fa-solid fa-eye"></i></button>
+                  <button title="Editar"><i class="fa-solid fa-pen"></i></button>
+                  <button title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+                </td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>Nikolai Schmidt</td>
+                <td><span class="status rejected"></span> Desconectado</td>
+                <td>nikolai.schmidt@outlook.com</td>
+                <td>22/03/1956</td>
+                <td class="actions">
+                  <button  title="Ver perfil"><i class="fa-solid fa-eye"></i></button>
+                  <button title="Editar"><i class="fa-solid fa-pen"></i></button>
+                  <button title="Eliminar"><i class="fa-solid fa-trash"></i></button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="pagination">
+            <button>&lt;</button>
+            <button class="active">1</button>
+            <button>2</button>
+            <button>3</button>
+            <button>4</button>
+            <button>&gt;</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
