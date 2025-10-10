@@ -23,6 +23,12 @@ body {
   padding: 2rem 1rem;
   display: flex;
   flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  transition: transform 0.3s ease;
+  z-index: 100;
 }
 
 .sidebar h2 {
@@ -67,6 +73,8 @@ body {
   padding: 1.5rem 2rem;
   display: flex;
   flex-direction: column;
+  margin-left: 230px;
+  transition: margin-left 0.3s ease;
 }
 
 /* Header */
@@ -75,6 +83,13 @@ body {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
+}
+
+.menu-btn {
+  display: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #333;
 }
 
 .breadcrumb {
@@ -126,26 +141,6 @@ body {
 
 .content-header h1 {
   font-size: 1.5rem;
-}
-
-.add-btn {
-  background: #0b69ff;
-  color: #fff;
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 6px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.add-btn i {
-  font-size: 0.9rem;
-}
-
-.add-btn:hover {
-  background: #094fc0;
 }
 
 /* Table */
@@ -254,13 +249,27 @@ th, td {
   border-color: #0b69ff;
 }
 
+/* Ocultar checkbox */
+#menu-toggle {
+  display: none;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
+  .menu-btn {
+    display: block;
+  }
+
   .sidebar {
-    display: none;
+    transform: translateX(-100%);
+  }
+
+  #menu-toggle:checked ~ .container .sidebar {
+    transform: translateX(0);
   }
 
   .main-content {
+    margin-left: 0;
     padding: 1rem;
   }
 
@@ -279,10 +288,5 @@ th, td {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
-  }
-
-  .add-btn {
-    width: 100%;
-    justify-content: center;
   }
 }
