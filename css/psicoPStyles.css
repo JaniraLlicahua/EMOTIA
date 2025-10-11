@@ -48,7 +48,7 @@ body {
   list-style: none;
 }
 
-.sidebar nav ul li {
+.sidebar nav ul a {
   padding: 0.8rem 1rem;
   border-radius: 8px;
   display: flex;
@@ -56,14 +56,16 @@ body {
   gap: 10px;
   cursor: pointer;
   transition: background 0.3s;
+  text-decoration: none;
+  color: white;
 }
 
-.sidebar nav ul li i {
+.sidebar nav ul a i {
   font-size: 1rem;
 }
 
-.sidebar nav ul li:hover,
-.sidebar nav ul li.active {
+.sidebar nav ul a:hover,
+.sidebar nav ul a.active {
   background: rgba(255, 255, 255, 0.2);
 }
 
