@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Psicólogo - Centro de Emociones</title>
+  <link rel="stylesheet" href="../css/psicoEStyles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <h2 class="logo">PANEL<br><span>PSICOLOGO</span></h2>
+      <nav class="menu">
+        <a href="psicoPacientes.html" class="menu-item"><i class="fa-solid fa-users"></i> Lista de Pacientes</a>
+        <a href="psicoEmociones.html" class="menu-item active"><i class="fa-regular fa-heart"></i> Centro de Emociones</a>
+        <a href="psicoChat.html" class="menu-item"><i class="fa-regular fa-comments"></i> Chat</a>
+        <a href="psicoReuniones.html" class="menu-item"><i class="fa-regular fa-calendar-check"></i> Reuniones</a>
+      </nav>
+    </aside>
+
+    <!-- Contenido principal -->
+    <main class="main">
+      <header class="header">
+        <h1>Centro de Emociones</h1>
+        <div class="header-actions">
+          <button class="icon-btn" title="Notificaciones"><i class="fa-regular fa-bell"></i></button>
+          <button class="icon-btn" title="Mensajes"><i class="fa-regular fa-envelope"></i></button>
+          <div class="user">
+            <img src="../pictures/user.png" alt="Usuario" class="avatar">
+            <span class="username">Derek Alvarado</span>
+            <i class="fa-solid fa-caret-down"></i>
+          </div>
+        </div>
+      </header>
+
+      <section class="emociones-section">
+        <div class="pacientes-lista">
+          <h3>Pacientes</h3>
+          <ul>
+            <li class="paciente active">
+              <img src="../pictures/user.png" alt="paciente">
+              <div>
+                <h4>Alyvia Kelley</h4>
+                <span>Última sesión: 10/10/2025</span>
+              </div>
+            </li>
+            <li class="paciente">
+              <img src="../pictures/user.png" alt="paciente">
+              <div>
+                <h4>Prince Chen</h4>
+                <span>Última sesión: 09/10/2025</span>
+              </div>
+            </li>
+            <li class="paciente">
+              <img src="../pictures/user.png" alt="paciente">
+              <div>
+                <h4>Clayton Charles</h4>
+                <span>Última sesión: 08/10/2025</span>
+              </div>
+            </li>
+            <li class="paciente">
+              <img src="../pictures/user.png" alt="paciente">
+              <div>
+                <h4>Nikolai Schmidt</h4>
+                <span>Última sesión: 06/10/2025</span>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="emociones-detalles">
+          <h3>Emociones Detectadas - Alyvia Kelley</h3>
+          <div class="emociones-grid">
+            <div class="emocion alegria">
+              <i class="fa-regular fa-face-smile"></i>
+              <p>Alegría</p>
+              <span>45%</span>
+            </div>
+            <div class="emocion tristeza">
+              <i class="fa-regular fa-face-sad-tear"></i>
+              <p>Tristeza</p>
+              <span>25%</span>
+            </div>
+            <div class="emocion enojo">
+              <i class="fa-regular fa-face-angry"></i>
+              <p>Enojo</p>
+              <span>10%</span>
+            </div>
+            <div class="emocion calma">
+              <i class="fa-regular fa-face-meh"></i>
+              <p>Calma</p>
+              <span>20%</span>
+            </div>
+          </div>
+
+          <div class="emocion-notas">
+            <h4>Notas del Psicólogo</h4>
+            <p>
+              Alyvia ha mostrado avances positivos en su control emocional. Aunque persisten algunos episodios de tristeza, 
+              se percibe una mejora constante en su estabilidad emocional. Se recomienda mantener el enfoque en terapia cognitivo-conductual.
+            </p>
+            <button class="btn-editar">Agregar Observación</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
