@@ -1,46 +1,36 @@
 # ia/model.py
-from tensorflow.keras.models import Sequential
+from tensorflow.keras.models import Model
 from tensorflow.keras.layers import (
-    Conv2D, MaxPooling2D, BatchNormalization,
-    Dropout, GlobalAveragePooling2D, Dense
+    Input, Conv2D, MaxPooling2D, BatchNormalization,
+    Dropout, Flatten, Dense, GlobalAveragePooling2D, ReLU
 )
-from tensorflow.keras.regularizers import l2
+from tensorflow.keras import regularizers
 
-def build_emotion_model(input_shape=(48, 48, 1), n_classes=7):
-    model = Sequential()
+def conv_block(x, filters, kernel=(3,3), pool=True, drop=0.25):
+    x = Conv2D(filters, kernel, padding="same", kernel_regularizer=regularizers.l2(1e-4))(x)
+    x = BatchNormalization()(x)
+    x = ReLU()(x)
+    x = Conv2D(filters, kernel, padding="same", kernel_regularizer=regularizers.l2(1e-4))(x)
+    x = BatchNormalization()(x)
+    x = ReLU()(x)
+    if pool:
+        x = MaxPooling2D((2,2))(x)
+    if drop and drop>0:
+        x = Dropout(drop)(x)
+    return x
 
-    # Bloque 1
-    model.add(Conv2D(64, (3,3), activation='relu', padding='same', input_shape=input_shape))
-    model.add(BatchNormalization())
-    model.add(Conv2D(64, (3,3), activation='relu', padding='same'))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(2,2))
-    model.add(Dropout(0.25))
+def build_emotion_model(input_shape=(48,48,1), n_classes=7):
+    i = Input(shape=input_shape)
 
-    # Bloque 2
-    model.add(Conv2D(128, (3,3), activation='relu', padding='same'))
-    model.add(BatchNormalization())
-    model.add(Conv2D(128, (3,3), activation='relu', padding='same'))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(2,2))
-    model.add(Dropout(0.3))
+    x = conv_block(i, 32, drop=0.2)
+    x = conv_block(x, 64, drop=0.25)
+    x = conv_block(x, 128, drop=0.3)
+    x = conv_block(x, 256, pool=True, drop=0.4)
 
-    # Bloque 3
-    model.add(Conv2D(256, (3,3), activation='relu', padding='same'))
-    model.add(BatchNormalization())
-    model.add(Conv2D(256, (3,3), activation='relu', padding='same'))
-    model.add(BatchNormalization())
-    model.add(MaxPooling2D(2,2))
-    model.add(Dropout(0.4))
+    x = GlobalAveragePooling2D()(x)
+    x = Dense(256, activation="relu")(x)
+    x = Dropout(0.5)(x)
+    out = Dense(n_classes, activation="softmax")(x)
 
-    # Global Average Pooling en vez de Flatten
-    model.add(GlobalAveragePooling2D())
-
-    # Capa densa regularizada
-    model.add(Dense(256, activation='relu', kernel_regularizer=l2(0.001)))
-    model.add(Dropout(0.5))
-
-    # Salida
-    model.add(Dense(n_classes, activation='softmax'))
-
+    model = Model(i, out, name="emotion_cnn")
     return model

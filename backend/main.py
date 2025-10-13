@@ -194,19 +194,22 @@ def preprocess_image_for_model(img_path: str):
     img = cv2.imread(str(img_path))
     if img is None:
         raise ValueError("No se pudo leer la imagen con OpenCV.")
+    
+    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30,30))
+    faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
     if len(faces) > 0:
         x, y, w, h = faces[0]
-        roi = gray[y:y+h, x:x+w]
+        roi = img_rgb[y:y+h, x:x+w]
     else:
-        h_img, w_img = gray.shape
+        h_img, w_img, _ = img_rgb.shape
         m = min(h_img, w_img)
         sx = w_img // 2 - m // 2
         sy = h_img // 2 - m // 2
-        roi = gray[sy:sy+m, sx:sx+m]
-    roi = cv2.resize(roi, (48, 48)).astype("float32") / 255.0
-    roi = np.expand_dims(roi, axis=(-1, 0))  # (1,48,48,1)
+        roi = img_rgb[sy:sy+m, sx:sx+m]
+
+    roi = cv2.resize(roi, (96, 96)).astype("float32") / 255.0
+    roi = np.expand_dims(roi, axis=0)  # (1, 96, 96, 3)
     return roi
 
 # ========================
