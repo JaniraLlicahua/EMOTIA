@@ -35,6 +35,20 @@ load_dotenv()
 app = FastAPI(title="🚀 EMOTIA Backend")
 
 # ========================
+# 🌍 Configuración CORS
+# ========================
+from fastapi.middleware.cors import CORSMiddleware
+
+# Permitir llamadas desde tu frontend (PyQt y navegador local)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # puedes restringir a "http://127.0.0.1:5500" si quieres
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# ========================
 # 🗄️ Conexión BD
 # ========================
 def get_db():
@@ -76,7 +90,7 @@ class RegisterPayload(BaseModel):
     role: str = "patient"  # admin / psychologist / patient
 
 class LoginPayload(BaseModel):
-    username: str
+    email: str
     password: str
 
 # 📌 Endpoint para registrar usuario
@@ -98,14 +112,17 @@ def register_user(payload: RegisterPayload, db: Session = Depends(get_db)):
 # 📌 Endpoint para login (devuelve JWT)
 @app.post("/login")
 def login(payload: LoginPayload, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.username == payload.username).first()
+    user = db.query(User).filter(User.email == payload.email).first()
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Credenciales inválidas")
-    token = create_access_token({"sub": user.username, "role": user.role, "user_id": user.id})
+
+    token = create_access_token({"sub": user.email, "role": user.role, "user_id": user.id})
+
     return {
         "access_token": token,
         "token_type": "bearer",
         "role": user.role,
+        "email": user.email,
         "username": user.username
     }
 

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Psicólogo - Reuniones</title>
+  <link rel="stylesheet" href="../css/psicoRStyles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <h2 class="logo">PANEL<br><span>PSICOLOGO</span></h2>
+      <nav class="menu">
+        <a href="psicoPacientes.html" class="menu-item"><i class="fa-solid fa-users"></i> Lista de Pacientes</a>
+        <a href="psicoEmociones.html" class="menu-item"><i class="fa-regular fa-heart"></i> Centro de Emociones</a>
+        <a href="psicoChat.html" class="menu-item"><i class="fa-regular fa-comments"></i> Chat</a>
+        <a href="psicoReuniones.html" class="menu-item active"><i class="fa-regular fa-calendar-check"></i> Reuniones</a>
+      </nav>
+    </aside>
+
+    <!-- Contenido principal -->
+    <main class="main">
+      <header class="header">
+        <h1>Reuniones Semanales</h1>
+        <div class="header-actions">
+          <button class="icon-btn" title="Notificaciones"><i class="fa-regular fa-bell"></i></button>
+          <button class="icon-btn" title="Mensajes"><i class="fa-regular fa-envelope"></i></button>
+          <div class="user">
+            <img src="../pictures/user.png" alt="Usuario" class="avatar">
+            <span class="username">Derek Alvarado</span>
+            <i class="fa-solid fa-caret-down"></i>
+          </div>
+        </div>
+      </header>
+
+      <section class="calendar-section">
+        <div class="calendar">
+          <div class="weekdays">
+            <div>Lunes</div>
+            <div>Martes</div>
+            <div>Miércoles</div>
+            <div>Jueves</div>
+            <div>Viernes</div>
+          </div>
+          <div class="sessions">
+            <div class="day">
+              <div class="session active">
+                <h4>10:00 - 11:00</h4>
+                <p>Sesión con Alyvia Kelley</p>
+              </div>
+              <div class="session">
+                <h4>15:00 - 16:00</h4>
+                <p>Sesión con Prince Chen</p>
+              </div>
+            </div>
+            <div class="day">
+              <div class="session">
+                <h4>09:00 - 10:00</h4>
+                <p>Sesión con Clayton Charles</p>
+              </div>
+            </div>
+            <div class="day">
+              <div class="session">
+                <h4>13:00 - 14:00</h4>
+                <p>Sesión con Nikolai Schmidt</p>
+              </div>
+            </div>
+            <div class="day">
+              <div class="session">
+                <h4>11:30 - 12:30</h4>
+                <p>Sesión con Anastasia Mcdaniel</p>
+              </div>
+            </div>
+            <div class="day">
+              <div class="session">
+                <h4>08:00 - 09:00</h4>
+                <p>Sesión con Jaiden Nixon</p>
+              </div>
+              <div class="session">
+                <h4>16:00 - 17:00</h4>
+                <p>Sesión con Ace Foley</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="details">
+          <h3>Detalles de la Sesión</h3>
+          <p><strong>Paciente:</strong> Alyvia Kelley</p>
+          <p><strong>Hora:</strong> 10:00 - 11:00</p>
+          <p><strong>Fecha:</strong> Lunes, 13 de Octubre</p>
+          <p><strong>Modalidad:</strong> Virtual</p>
+          <p><strong>Notas:</strong> Revisión del progreso emocional y seguimiento de terapia cognitiva.</p>
+          <button class="btn-editar">Editar Sesión</button>
+        </aside>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
