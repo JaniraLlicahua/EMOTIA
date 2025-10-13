@@ -350,13 +350,19 @@ async def ws_predict(websocket: WebSocket, session_id: int):
         SESSION_CLIENTS[sid].discard(websocket)
 
 # ========================
-# 🌐 Servir frontend (HTML estático)
+# 🔗 Registrar modelos y rutas
 # ========================
-FRONTEND_DIR = ROOT / "frontend"
-app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
-
-# 👇 al final de backend/main.py
 import backend.models as models
 from backend.database import engine
 
 models.Base.metadata.create_all(bind=engine)
+
+# 🔗 Importar y registrar rutas adicionales (antes de montar el frontend)
+from backend.routes import admin
+app.include_router(admin.router)
+
+# ========================
+# 🌐 Servir frontend (HTML estático)
+# ========================
+FRONTEND_DIR = ROOT / "frontend"
+app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")
