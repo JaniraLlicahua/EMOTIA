@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calendario - Panel Paciente</title>
+  <link rel="stylesheet" href="../css/pacieRStyles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <input type="checkbox" id="menu-toggle" />
+
+  <div class="container">
+    <!-- ===== Sidebar ===== -->
+    <aside class="sidebar">
+      <h2 class="logo">PANEL<br>PACIENTE</h2>
+      <nav>
+        <ul>
+          <a class="active" href="pacieCalendario.html"><i class="fa-regular fa-calendar"></i> Calendario</a>
+          <a href="pacieChat.html"><i class="fa-regular fa-comments"></i> Chat</a>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- ===== Main ===== -->
+    <main class="main-content">
+      <header class="header">
+        <label for="menu-toggle" class="menu-btn"><i class="fa-solid fa-bars"></i></label>
+
+        <div class="breadcrumb">
+          <span class="current">Calendario de Sesiones</span>
+        </div>
+
+        <div class="header-right">
+          <button class="icon-btn" title="Notificaciones"><i class="fa-regular fa-bell"></i></button>
+          <button class="icon-btn" title="Mensajes"><i class="fa-regular fa-envelope"></i></button>
+
+          <div class="user">
+            <img src="../pictures/Alyvia_Kelley.png" alt="Usuario" class="avatar" title="Paciente" />
+            <span class="username" title="Nombre de usuario">Alyvia Kelley</span>
+            <i class="fa-solid fa-caret-down"></i>
+          </div>
+        </div>
+      </header>
+
+      <!-- ===== Calendario ===== -->
+      <section class="calendar-container">
+        <div class="calendar-header">
+          <button class="nav-btn"><i class="fa-solid fa-chevron-left"></i></button>
+          <h3>Semana del 13 - 19 Octubre 2025</h3>
+          <button class="nav-btn"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+
+        <div class="calendar-grid">
+          <div class="day">
+            <h4>Lunes</h4>
+            <div class="session">
+              <p class="hour">10:00 AM</p>
+              <p class="topic">Terapia Emocional</p>
+              <span class="psych">Dr. Derek Alvarado</span>
+            </div>
+          </div>
+
+          <div class="day">
+            <h4>Martes</h4>
+            <p class="no-session">Sin sesiones</p>
+          </div>
+
+          <div class="day">
+            <h4>Miércoles</h4>
+            <div class="session">
+              <p class="hour">4:00 PM</p>
+              <p class="topic">Seguimiento Personal</p>
+              <span class="psych">Dr. Derek Alvarado</span>
+            </div>
+          </div>
+
+          <div class="day">
+            <h4>Jueves</h4>
+            <p class="no-session">Sin sesiones</p>
+          </div>
+
+          <div class="day">
+            <h4>Viernes</h4>
+            <div class="session">
+              <p class="hour">10:00 AM</p>
+              <p class="topic">Terapia de Ansiedad</p>
+              <span class="psych">Dr. Derek Alvarado</span>
+            </div>
+          </div>
+
+          <div class="day">
+            <h4>Sábado</h4>
+            <p class="no-session">Sin sesiones</p>
+          </div>
+
+          <div class="day">
+            <h4>Domingo</h4>
+            <p class="no-session">Descanso</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== Panel Detalles ===== -->
+      <aside class="details-panel" id="detailsPanel">
+        <h3>Detalles de la sesión</h3>
+        <p><strong>Fecha:</strong> Viernes, 17 Octubre 2025</p>
+        <p><strong>Hora:</strong> 10:00 AM</p>
+        <p><strong>Psicólogo:</strong> Dr. Derek Alvarado</p>
+        <p><strong>Tema:</strong> Terapia de Ansiedad</p>
+        <p><strong>Duración:</strong> 1 hora</p>
+        <button class="close-btn" onclick="closeDetails()">Cerrar</button>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const sessions = document.querySelectorAll(".session");
+    const panel = document.getElementById("detailsPanel");
+
+    sessions.forEach(s => {
+      s.addEventListener("click", () => {
+        panel.classList.add("show");
+      });
+    });
+
+    function closeDetails() {
+      panel.classList.remove("show");
+    }
+  </script>
+</body>
+</html>

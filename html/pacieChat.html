@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat - Panel Paciente</title>
+  <link rel="stylesheet" href="../css/pacieCStyles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+</head>
+<body>
+  <input type="checkbox" id="menu-toggle" />
+
+  <div class="container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <h2 class="logo">PANEL<br>PACIENTE</h2>
+      <nav>
+        <ul>
+          <a href="pacieCalendario.html"><i class="fa-regular fa-calendar"></i> Calendario</a>
+          <a class="active" href="pacieChat.html"><i class="fa-regular fa-comments"></i> Chat</a>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Contenido principal -->
+    <main class="main-content">
+      <header class="header">
+        <label for="menu-toggle" class="menu-btn"><i class="fa-solid fa-bars"></i></label>
+
+        <div class="breadcrumb">
+          <span class="current">Chat con Psicólogo</span>
+        </div>
+
+        <div class="header-right">
+          <button class="icon-btn" title="Notificaciones"><i class="fa-regular fa-bell"></i></button>
+          <button class="icon-btn" title="Mensajes"><i class="fa-regular fa-envelope"></i></button>
+          <div class="user">
+            <img src="../pictures/Alyvia_Kelley.png" alt="Usuario" title="userPaciente" class="avatar">
+            <span class="username" title="username">Alyvia Kelley</span>
+            <i class="fa-solid fa-caret-down"></i>
+          </div>
+        </div>
+      </header>
+
+      <!-- Chat principal -->
+      <section class="chat-container">
+        <div class="chat-header">
+          <div class="chat-user">
+            <img src="../pictures/psicologo.png" alt="Psicólogo">
+            <div>
+              <h4>Dr. Derek Alvarado</h4>
+              <p>En línea</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-messages">
+          <div class="message received">
+            <p>Hola Alyvia, ¿cómo te sientes hoy?</p>
+            <span>10:15 AM</span>
+          </div>
+          <div class="message sent">
+            <p>Buenos días doctor, estoy un poco mejor. Gracias por preguntar.</p>
+            <span>10:17 AM</span>
+          </div>
+          <div class="message received">
+            <p>Excelente. ¿Quieres que programemos una nueva sesión esta semana?</p>
+            <span>10:18 AM</span>
+          </div>
+          <div class="message sent">
+            <p>Sí, por favor. El viernes a las 10:00 AM me vendría bien.</p>
+            <span>10:19 AM</span>
+          </div>
+        </div>
+
+        <div class="chat-input">
+          <input type="text" placeholder="Escribe un mensaje..." />
+          <button><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
