@@ -62,11 +62,6 @@ for layer in base.layers[:-30]:
 for layer in base.layers[-30:]:
     layer.trainable = True
 
-# opcional: hacer solo últimas N entrenables (más seguro)
-#base = model.layers[0]   # si usas MobileNetV2 como base en index 0
-#for layer in base.layers[:-30]:
-#    layer.trainable = False
-
 model.compile(optimizer=Adam(1e-6), loss='categorical_crossentropy', metrics=['accuracy'])
 
 callbacks_ft = [

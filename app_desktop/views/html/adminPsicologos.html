@@ -25,9 +25,15 @@
     </div>
 
     <nav class="nav">
-      <a class="nav-item" href="adminPacientes.html" title="Pacientes"><i class="fa-solid fa-user-injured"></i> <span>Pacientes</span></a>
-      <a class="nav-item active" href="adminPsicologos.html" title="Psicólogos"><i class="fa-solid fa-user-tie"></i> <span>Psicólogos</span></a>
-      <a class="nav-item" href="adminReportes.html" title="Reportes"><i class="fa-solid fa-chart-line"></i> <span>Reportes</span></a>
+      <a class="nav-item" href="adminPacientes.html" title="Pacientes">
+        <i class="fa-solid fa-user-injured"></i> <span>Pacientes</span>
+      </a>
+      <a class="nav-item active" href="adminPsicologos.html" title="Psicólogos">
+        <i class="fa-solid fa-user-tie"></i> <span>Psicólogos</span>
+      </a>
+      <a class="nav-item" href="adminReportes.html" title="Reportes">
+        <i class="fa-solid fa-chart-line"></i> <span>Reportes</span>
+      </a>
     </nav>
 
     <div class="sidebar-footer">
@@ -60,7 +66,7 @@
 
         <div class="user">
           <img src="../pictures/user.png" alt="Usuario" class="avatar" title="img user">
-          <span class="username" title="usuario">Derek Alvarado</span>
+          <span class="username" title="usuario">Administrador</span>
           <i class="fa-solid fa-caret-down small" title="ver más"></i>
         </div>
       </div>
@@ -70,22 +76,24 @@
     <section class="content">
       <div class="content-header">
         <h1>Lista de Psicólogos</h1>
-        <button class="btn-primary" title="añadir"><i class="fa-solid fa-user-plus"></i> Añadir</button>
+        <button class="btn-primary" id="btn-add-psicologo" title="Añadir nuevo psicólogo">
+          <i class="fa-solid fa-user-plus"></i> Añadir
+        </button>
       </div>
 
       <div class="card">
         <div class="table-toolbar">
           <div class="pagination-quick">
-            <button class="icon-btn small" title="anterior"><i class="fa-solid fa-angle-left"></i></button>
+            <button class="icon-btn small" title="Anterior"><i class="fa-solid fa-angle-left"></i></button>
             <div class="page-numbers">
               <button class="page active">1</button>
               <button class="page">2</button>
             </div>
-            <button class="icon-btn small" title="siguiente"><i class="fa-solid fa-angle-right"></i></button>
+            <button class="icon-btn small" title="Siguiente"><i class="fa-solid fa-angle-right"></i></button>
           </div>
 
           <div class="per-page">
-            <label>Mostrar de </label>
+            <label>Mostrar </label>
             <select aria-label="items-per-page">
               <option>10</option>
               <option>20</option>
@@ -94,8 +102,9 @@
           </div>
         </div>
 
+        <!-- Tabla de Psicólogos -->
         <div class="table-responsive">
-          <table class="patients-table" role="table">
+          <table class="psychologists-table" role="table">
             <thead>
               <tr>
                 <th>#</th>
@@ -108,94 +117,14 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>1</td>
-                <td>Laura Gutiérrez</td>
-                <td>Psicología Infantil</td>
-                <td>laura.gutierrez@gmail.com</td>
-                <td>999-234-876</td>
-                <td><span class="status approved"></span> Activo</td>
-                <td class="actions-col">
-                  <button class="icon-btn"><i class="fa-solid fa-eye" title="Ver perfil"></i></button>
-                  <button class="icon-btn"><i class="fa-solid fa-pen-to-square" title="Editar"></i></button>
-                  <button class="icon-btn"><i class="fa-solid fa-trash" title="Eliminar"></i></button>
-                </td>
-              </tr>
-
-              <tr>
-                <td>2</td>
-                <td>José Ramos</td>
-                <td>Psicología Clínica</td>
-                <td>jramos@outlook.com</td>
-                <td>988-453-221</td>
-                <td><span class="status rejected"></span> Inactivo</td>
-                <td class="actions-col">
-                  <button class="icon-btn"><i class="fa-solid fa-eye"></i></button>
-                  <button class="icon-btn"><i class="fa-solid fa-pen-to-square"></i></button>
-                  <button class="icon-btn"><i class="fa-solid fa-trash"></i></button>
-                </td>
-              </tr>
-
-              <tr>
-                <td>3</td>
-                <td>Camila Torres</td>
-                <td>Psicoterapia Cognitiva</td>
-                <td>camila.torres@hotmail.com</td>
-                <td>987-214-332</td>
-                <td><span class="status approved"></span> Activo</td>
-                <td class="actions-col">
-                  <button class="icon-btn"><i class="fa-solid fa-eye"></i></button>
-                  <button class="icon-btn"><i class="fa-solid fa-pen-to-square"></i></button>
-                  <button class="icon-btn"><i class="fa-solid fa-trash"></i></button>
-                </td>
-              </tr>
-
-              <tr>
-                <td>4</td>
-                <td>Santiago Paredes</td>
-                <td>Psicología Educativa</td>
-                <td>santiago.paredes@gmail.com</td>
-                <td>976-001-543</td>
-                <td><span class="status blocked"></span> En sesión</td>
-                <td class="actions-col">
-                  <button class="icon-btn"><i class="fa-solid fa-eye"></i></button>
-                  <button class="icon-btn"><i class="fa-solid fa-pen-to-square"></i></button>
-                  <button class="icon-btn"><i class="fa-solid fa-trash"></i></button>
-                </td>
-              </tr>
-
-              <tr>
-                <td>5</td>
-                <td>María Flores</td>
-                <td>Psicología Familiar</td>
-                <td>mflores@hotmail.com</td>
-                <td>985-212-990</td>
-                <td><span class="status rejected"></span> Inactivo</td>
-                <td class="actions-col">
-                  <button class="icon-btn"><i class="fa-solid fa-eye"></i></button>
-                  <button class="icon-btn"><i class="fa-solid fa-pen-to-square"></i></button>
-                  <button class="icon-btn"><i class="fa-solid fa-trash"></i></button>
-                </td>
-              </tr>
-
-              <tr>
-                <td>6</td>
-                <td>Daniel Silva</td>
-                <td>Psicología Organizacional</td>
-                <td>daniel.silva@correo.com</td>
-                <td>911-889-300</td>
-                <td><span class="status approved"></span> Activo</td>
-                <td class="actions-col">
-                  <button class="icon-btn"><i class="fa-solid fa-eye"></i></button>
-                  <button class="icon-btn"><i class="fa-solid fa-pen-to-square"></i></button>
-                  <button class="icon-btn"><i class="fa-solid fa-trash"></i></button>
-                </td>
-              </tr>
+              <!-- Filas generadas dinámicamente por adminPsicologos.js -->
             </tbody>
           </table>
         </div>
       </div>
     </section>
   </div>
+  <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+  <script src="../js/adminPsicologos.js"></script>
 </body>
 </html>

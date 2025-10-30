@@ -1,26 +1,33 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Admin - Emotia / Reportes</title>
+
+  <!-- Fuentes y estilos -->
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/adminRStyles.css">
+
+  <!-- Iconos -->
   <script src="https://kit.fontawesome.com/a2e0e9f5cc.js" crossorigin="anonymous"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <div class="dashboard">
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="brand">
-        <img src="../pictures/logo-emotia.png" alt="Emotia" class="logo" title="EMOTIA">
+        <img src="../pictures/logo-emotia.png" alt="Emotia" class="logo">
         <span class="brand-title">ADMIN</span>
       </div>
 
       <nav class="nav">
-        <a class="nav-item" href="adminPacientes.html" title="Pacientes"><i class="fa-solid fa-user-injured"></i> <span>Pacientes</span></a>
-        <a class="nav-item active" href="adminPsicologos.html" title="Psicólogos"><i class="fa-solid fa-user-tie"></i> <span>Psicólogos</span></a>
-        <a class="nav-item" href="adminReportes.html" title="Reportes"><i class="fa-solid  fa-chart-line"></i> <span>Reportes</span></a>
+        <a class="nav-item" href="adminPacientes.html"><i class="fa-solid fa-user-injured"></i> <span>Pacientes</span></a>
+        <a class="nav-item" href="adminPsicologos.html"><i class="fa-solid fa-user-tie"></i> <span>Psicólogos</span></a>
+        <a class="nav-item active" href="adminReportes.html"><i class="fa-solid fa-chart-line"></i> <span>Reportes</span></a>
       </nav>
 
       <div class="sidebar-footer">
@@ -28,83 +35,44 @@
       </div>
     </aside>
 
-    <!-- Contenido Principal -->
+    <!-- Contenido principal -->
     <main class="main">
-      <!-- Encabezado superior -->
       <header class="topbar">
-        <label for="sidebar-toggle" class="toggle-btn" title="Mostrar / Ocultar menú">
+        <label for="sidebar-toggle" class="toggle-btn">
           <i class="fa-solid fa-bars"></i>
         </label>
-
-        <div class="breadcrumb">Lista de Reportes</div>
-
+        <div class="breadcrumb">Panel de Reportes</div>
         <div class="top-actions">
-          <div class="search">
-            <input type="search" placeholder="Buscar reporte..." aria-label="Buscar reportes">
-            <i class="fa-solid fa-magnifying-glass"></i>
-          </div>
-
-          <div class="filter-date">
-            <input type="date" aria-label="Filtrar por fecha">
-            <i class="fa-solid fa-calendar-days"></i>
-          </div>
-
-          <button class="icon-btn" title="Notificaciones"><i class="fa-regular fa-bell"></i></button>
-          <button class="icon-btn" title="Mensajes"><i class="fa-regular fa-envelope"></i></button>
-
+          <button class="icon-btn"><i class="fa-regular fa-bell"></i></button>
+          <button class="icon-btn"><i class="fa-regular fa-envelope"></i></button>
           <div class="user">
-            <img src="../pictures/user.png" alt="Usuario" class="avatar" title="img user">
-            <span class="username" title="usuario">Derek Alvarado</span>
-            <i class="fa-solid fa-caret-down small" title="ver más"></i>
+            <img src="../pictures/user.png" alt="Usuario" class="avatar">
+            <span class="username">Administrador</span>
           </div>
         </div>
       </header>
 
-      <!-- Sección de tarjetas resumen -->
-      <section class="cards-grid">
-        <div class="card stat">
-          <i class="fas fa-user-friends icon blue"></i>
-          <div>
-            <h3>25</h3>
-            <p>Pacientes Atendidos</p>
-          </div>
-        </div>
-        <div class="card stat">
-          <i class="fas fa-user-md icon green"></i>
-          <div>
-            <h3>6</h3>
-            <p>Psicólogos Activos</p>
-          </div>
-        </div>
-        <div class="card stat">
-          <i class="fas fa-chart-line icon purple"></i>
-          <div>
-            <h3>78%</h3>
-            <p>Progreso Promedio</p>
-          </div>
-        </div>
-        <div class="card stat">
-          <i class="fas fa-star icon yellow"></i>
-          <div>
-            <h3>Laura G.</h3>
-            <p>Top Psicóloga</p>
-          </div>
-        </div>
+      <!-- Tarjetas resumen -->
+      <section class="cards-grid" id="summary-cards">
+        <div class="card stat"><i class="fas fa-user-friends icon blue"></i><div><h3 id="total-patients">--</h3><p>Pacientes Atendidos</p></div></div>
+        <div class="card stat"><i class="fas fa-user-md icon green"></i><div><h3 id="active-psychologists">--</h3><p>Psicólogos Activos</p></div></div>
+        <div class="card stat"><i class="fas fa-chart-line icon purple"></i><div><h3 id="avg-progress">--%</h3><p>Progreso Promedio</p></div></div>
+        <div class="card stat"><i class="fas fa-star icon yellow"></i><div><h3 id="top-psychologist">--</h3><p>Top Psicólogo</p></div></div>
       </section>
 
-      <!-- Sección de gráficos -->
+      <!-- Gráficos -->
       <section class="charts">
         <div class="chart-card">
           <h4>Progreso de Pacientes (Mensual)</h4>
-          <div class="chart-placeholder">[Gráfico de barras]</div>
+          <canvas id="patientsProgressChart"></canvas>
         </div>
         <div class="chart-card">
           <h4>Distribución por Especialidad</h4>
-          <div class="chart-placeholder">[Gráfico circular]</div>
+          <canvas id="specialtyChart"></canvas>
         </div>
         <div class="chart-card">
           <h4>Sesiones Realizadas (Semanal)</h4>
-          <div class="chart-placeholder">[Gráfico de línea]</div>
+          <canvas id="sessionsChart"></canvas>
         </div>
       </section>
 
@@ -123,37 +91,16 @@
               <th>Acciones</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>01</td>
-              <td>José Ramos</td>
-              <td>Laura Gutiérrez</td>
-              <td>2025-10-01</td>
-              <td>85%</td>
-              <td><span class="status success">Aprobado</span></td>
-              <td>
-                <button class="btn small">Ver</button>
-                <button class="btn small edit">Editar</button>
-                <button class="btn small danger">Eliminar</button>
-              </td>
-            </tr>
-            <tr>
-              <td>02</td>
-              <td>María Torres</td>
-              <td>José Huamán</td>
-              <td>2025-09-28</td>
-              <td>70%</td>
-              <td><span class="status warning">En revisión</span></td>
-              <td>
-                <button class="btn small">Ver</button>
-                <button class="btn small edit">Editar</button>
-                <button class="btn small danger">Eliminar</button>
-              </td>
-            </tr>
+          <tbody id="reports-table-body">
+            <!-- Filas generadas por JS -->
           </tbody>
         </table>
       </section>
     </main>
   </div>
+
+  <!-- Script -->
+  <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+  <script src="../js/adminReportes.js"></script>
 </body>
 </html>

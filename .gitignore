@@ -20,12 +20,6 @@ Thumbs.db
 # Data (no commitear dataset)
 data/
 
-# Modelos pesados (usar LFS o releases si quieres)
-ia/models/
-models/
-*.keras
-*.h5
-
 # Logs
 logs/
 *.log

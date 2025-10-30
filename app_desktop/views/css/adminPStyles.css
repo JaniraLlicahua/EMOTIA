@@ -313,3 +313,75 @@ content: ""; position: fixed; inset: 0; background: rgba(0,0,0,0.28); z-index: 4
 .content-header { flex-direction: column; align-items: flex-start; gap: 12px; }
 .patients-table thead th, .patients-table tbody td { font-size: 13px; padding: 12px; }
 }
+
+/* === Ajuste visual del modal === */
+.hidden {
+  display: none !important;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  width: 80%;
+  max-width: 600px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+}
+
+.modal-medium {
+  max-width: 600px; /* tamaño predeterminado medio */
+}
+
+.modal-content h2 {
+  font-size: 1.3rem;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.modal-content label {
+  display: block;
+  margin-top: 10px;
+  font-weight: 500;
+}
+
+.modal-content input,
+.modal-content select {
+  width: 100%;
+  padding: 8px;
+  margin-top: 4px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.modal.show {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 10000;
+}
+
+.icon-btn i.fa-user-doctor {
+  color: #0b69ff;
+}
+.icon-btn:hover i.fa-user-doctor {
+  color: #0551c7;
+}

@@ -1,4 +1,4 @@
-// frontend/js/room.js
+//frontend/js/room.js
 (async () => {
   // Extraer session_id y token desde query params (opcional)
   const params = new URLSearchParams(window.location.search);

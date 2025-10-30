@@ -225,3 +225,81 @@ body {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* ======= Botón Nueva Reunión ======= */
+.btn-nueva {
+  background-color: #94b84d;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-nueva:hover {
+  background-color: #7fa83d;
+}
+
+/* ======= Modal ======= */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 50;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+  background: white;
+  margin: 10% auto;
+  padding: 20px 30px;
+  border-radius: 12px;
+  width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.modal-content h2 {
+  text-align: center;
+  margin-bottom: 10px;
+  color: #4a4a4a;
+}
+
+.modal-content input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.btn-guardar, .btn-cancelar {
+  padding: 8px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-guardar {
+  background: #94b84d;
+  color: white;
+}
+
+.btn-cancelar {
+  background: #ccc;
+  color: #333;
+}
+
+.btn-guardar:hover {
+  background: #7fa83d;
+}
+
+.btn-cancelar:hover {
+  background: #b5b5b5;
+}
