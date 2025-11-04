@@ -36,7 +36,6 @@ body {
 
 .logo span {
   font-weight: 600;
-  font-family: "Black Han Sans", sans-serif;
 }
 
 .menu {
@@ -75,11 +74,13 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .header h1 {
   font-size: 1.8rem;
+  font-weight: 700;
+  color: #333;
 }
 
 .header-actions {
@@ -93,6 +94,11 @@ body {
   background: none;
   font-size: 1.2rem;
   cursor: pointer;
+  color: #555;
+}
+
+.icon-btn:hover {
+  color: #94b84d;
 }
 
 .user {
@@ -119,30 +125,70 @@ body {
 .calendar-section {
   display: grid;
   grid-template-columns: 2fr 1fr;
-  gap: 2rem;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* 🔹 Encabezado semanal arriba del tablero */
+.calendar-header {
+  grid-column: 1 / span 2;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.8rem;
+  background: #fff;
+  padding: 0.8rem 1.2rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-header h3 {
+  font-weight: 600;
+  color: #333;
+  font-size: 1rem;
+}
+
+.nav-btn {
+  background: #4e8df5;
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.nav-btn:hover {
+  background: #376cd3;
+}
+
+/* 🔹 Tablero de días */
+.calendar {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  overflow: hidden;
 }
 
 .weekdays {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   background: #e6e6e6;
-  border-radius: 10px 10px 0 0;
   text-align: center;
   padding: 0.8rem 0;
   font-weight: 600;
+  color: #444;
 }
 
 .sessions {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   background: white;
-  border-radius: 0 0 10px 10px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .day {
   border-right: 1px solid #f0f0f0;
-  min-height: 300px;
+  min-height: 320px;
   padding: 1rem;
 }
 
@@ -151,21 +197,22 @@ body {
 }
 
 .session {
-  background: #f5f5f5;
+  background: #f8f9fa;
   padding: 0.7rem;
   border-radius: 10px;
   margin-bottom: 1rem;
   cursor: pointer;
   transition: 0.3s;
+  border-left: 4px solid transparent;
 }
 
 .session.active {
-  background: #c8e6c9;
-  border-left: 4px solid #4caf50;
+  background: #eaf5e1;
+  border-left: 4px solid #94b84d;
 }
 
 .session:hover {
-  background: #d7ebd8;
+  background: #f0f8e8;
 }
 
 /* ======= Detalles ======= */
@@ -174,14 +221,19 @@ body {
   border-radius: 10px;
   padding: 1.5rem;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 1rem;
+  height: fit-content;
 }
 
 .details h3 {
   margin-bottom: 1rem;
+  color: #333;
 }
 
 .details p {
-  margin: 0.3rem 0;
+  margin: 0.4rem 0;
+  color: #444;
 }
 
 .btn-editar {
@@ -194,51 +246,10 @@ body {
   cursor: pointer;
   font-weight: 600;
   transition: 0.3s;
+  width: 100%;
 }
 
 .btn-editar:hover {
-  background-color: #668d5a;
-}
-
-/* ======= Responsive ======= */
-@media (max-width: 1024px) {
-  .calendar-section {
-    grid-template-columns: 1fr;
-  }
-
-  .details {
-    margin-top: 1.5rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .sidebar {
-    display: none;
-  }
-
-  .main {
-    padding: 1rem;
-  }
-
-  .weekdays,
-  .sessions {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* ======= Botón Nueva Reunión ======= */
-.btn-nueva {
-  background-color: #94b84d;
-  color: white;
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.btn-nueva:hover {
   background-color: #7fa83d;
 }
 
@@ -302,4 +313,72 @@ body {
 
 .btn-cancelar:hover {
   background: #b5b5b5;
+}
+
+/* ======= Responsive ======= */
+@media (max-width: 1024px) {
+  .calendar-section {
+    grid-template-columns: 1fr;
+  }
+
+  .details {
+    margin-top: 1.5rem;
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+
+  .main {
+    padding: 1rem;
+  }
+
+  .weekdays,
+  .sessions {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+/* ===== Mejoras visuales calendario ===== */
+.calendar-section {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+}
+
+.calendar-header {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.calendar {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  padding-bottom: 10px;
+}
+
+.weekdays div {
+  font-weight: 600;
+  color: #333;
+}
+
+.details {
+  align-self: start;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+}
+
+.session.active {
+  background: #e9f7ef;
+  border-left: 4px solid #4caf50;
 }

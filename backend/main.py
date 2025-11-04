@@ -235,23 +235,25 @@ def predict_from_bytes(frame_bytes: bytes):
     img = cv2.imdecode(arr, cv2.IMREAD_COLOR)
     if img is None:
         return None
+
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
     if len(faces) > 0:
         x, y, w, h = faces[0]
-        roi = gray[y:y + h, x:x + w]
+        face = img[y:y + h, x:x + w]  # usamos color, no gray
     else:
-        h_img, w_img = gray.shape
+        h_img, w_img, _ = img.shape
         m = min(h_img, w_img)
         sx = w_img // 2 - m // 2
         sy = h_img // 2 - m // 2
-        roi = gray[sy:sy + m, sx:sx + m]
-    roi = cv2.resize(roi, (48, 48)).astype("float32") / 255.0
-    roi = np.expand_dims(np.expand_dims(roi, -1), 0)
+        face = img[sy:sy + m, sx:sx + m]
+
+    # 🔧 Cambiado a (96x96x3)
+    roi = cv2.resize(face, (96, 96)).astype("float32") / 255.0
+    roi = np.expand_dims(roi, axis=0)  # (1,96,96,3)
     preds = model.predict(roi, verbose=0)[0]
     idx = int(np.argmax(preds))
     return {"emotion": CLASS_NAMES[idx], "confidence": float(preds[idx])}
-
 
 SESSION_CLIENTS: dict[int, set] = {}
 
@@ -279,6 +281,45 @@ async def ws_predict(websocket: WebSocket, session_id: int):
                             SESSION_CLIENTS[sid].discard(client)
     except WebSocketDisconnect:
         SESSION_CLIENTS[sid].discard(websocket)
+
+# Señalización WebSocket simple (relay)
+SIGNAL_CLIENTS: dict[int, set] = {}
+
+# --- Señalización WebSocket autenticada ---
+from fastapi import WebSocket, WebSocketDisconnect, Query
+import jwt
+
+SECRET_KEY = "clave_super_secreta"
+ALGORITHM = "HS256"
+SIGNAL_CLIENTS = {}
+
+@app.websocket("/ws/signal/{session_id}")
+async def ws_signal(websocket: WebSocket, session_id: int, token: str = Query(None)):
+    """Canal WebRTC autenticado"""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user = payload.get("sub")
+        role = payload.get("role")
+    except Exception:
+        await websocket.close(code=4001)
+        return
+
+    await websocket.accept()
+    sid = int(session_id)
+    if sid not in SIGNAL_CLIENTS:
+        SIGNAL_CLIENTS[sid] = set()
+    SIGNAL_CLIENTS[sid].add(websocket)
+    print(f"✅ {user} ({role}) conectado a señal {sid}")
+
+    try:
+        while True:
+            msg = await websocket.receive_text()
+            for c in list(SIGNAL_CLIENTS[sid]):
+                if c != websocket:
+                    await c.send_text(msg)
+    except WebSocketDisconnect:
+        SIGNAL_CLIENTS[sid].discard(websocket)
+        print(f"👋 {user} desconectado de señal {sid}")
 
 # Importar routers (mantener como antes)
 from backend.routes import admin
@@ -308,4 +349,3 @@ from fastapi.responses import RedirectResponse
 def redirect_to_frontend():
     # Si quieres cambiar el html por defecto, ajusta la ruta abajo
     return RedirectResponse(url="/static/html/login.html")
-# -------------------------------------------------------

@@ -17,7 +17,7 @@ train_dir = os.path.join(BASE_DIR, "train")
 test_dir = os.path.join(BASE_DIR, "test")
 
 # 1) cargar datos
-train_gen, val_gen, test_gen = load_dataset(train_dir, test_dir, img_size=(96,96), batch_size=64)
+train_gen, val_gen, test_gen = load_dataset(train_dir, test_dir, img_size=(128,128), batch_size=32)
 
 # 2) class weights
 labels = train_gen.classes
@@ -30,7 +30,7 @@ class_weights = dict(enumerate(class_weights_values))
 print("✅ Class weights:", class_weights)
 
 # 3) build model (fase 1: feature extractor)
-model = build_tl_model(input_shape=(96,96,3), n_classes=7)
+model = build_tl_model(input_shape=(128,128,3), n_classes=7)
 model.compile(optimizer=Adam(1e-3), loss='categorical_crossentropy', metrics=['accuracy'])
 
 callbacks = [
@@ -59,7 +59,7 @@ print("▶ Fine-tuning: descongelando últimas capas del backbone")
 base = model.layers[0]
 for layer in base.layers[:-30]:
     layer.trainable = False
-for layer in base.layers[-30:]:
+for layer in base.layers[-40:]:
     layer.trainable = True
 
 model.compile(optimizer=Adam(1e-6), loss='categorical_crossentropy', metrics=['accuracy'])

@@ -61,9 +61,9 @@ class Appointment(Base):
     status = Column(String, default="pendiente")  # pendiente, completada, cancelada
     progress = Column(Integer, default=0)  # % de progreso
     notes = Column(Text, nullable=True)
+    mode = Column(String, default="virtual")  # 👈 nuevo campo
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Relaciones bidireccionales
     psychologist = relationship("User", foreign_keys=[psychologist_id], back_populates="psychologist_patients")
     patient = relationship("User", foreign_keys=[patient_id], back_populates="patient_appointments")
 

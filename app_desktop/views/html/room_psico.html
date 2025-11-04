@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Emotia — Sala Psicólogo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/psicoRoStyles.css">
+</head>
+
+<body>
+<div class="topbar">
+    <h2>👩‍⚕️ EMOTIA — Sesión Psicólogo</h2>
+    <div id="sessionInfo">Sesión #: —</div>
+</div>
+
+<div class="layout">
+    <div class="call-area">
+        <video id="remoteVideo" autoplay playsinline></video>
+        <video id="localVideo" autoplay muted playsinline></video>
+
+        <div class="controls">
+            <button id="btnCam" title="Activar/Desactivar cámara"><i class="fa-solid fa-video"></i></button>
+            <button id="btnMic" title="Activar/Desactivar micrófono"><i class="fa-solid fa-microphone"></i></button>
+            <!-- botón de reporte eliminado (guardado automático) -->
+            <button id="btnHangup" class="danger" title="Finalizar"><i class="fa-solid fa-phone-slash"></i></button>
+        </div>
+
+        <!-- overlay de alerta (oculto por defecto) -->
+        <div id="alertOverlay" class="alert-overlay" style="display:none;">
+            <div class="alert-box">⚠️ Atención: emoción persistente detectada</div>
+        </div>
+    </div>
+
+    <aside class="panel">
+        <h3>Panel de Emociones</h3>
+        <canvas id="emotionChart"></canvas>
+        <div id="emotionCounts" style="font-size:13px;color:#444;margin-top:8px;"></div>
+
+        <h3>📝 Notas del Psicólogo</h3>
+        <textarea id="notes" placeholder="Escribe tus observaciones aquí..."></textarea>
+    </aside>
+</div>
+
+<div class="footer">Emotia — Videollamada con IA de Emociones</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="../js/room_psico.js"></script>
+</body>
+</html>
