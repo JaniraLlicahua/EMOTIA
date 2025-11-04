@@ -328,6 +328,7 @@ from backend.routes import psychologist_reports
 from backend.routes import psychologist
 from backend.routes import chat_ws, chat_rest
 from backend.routes import meetings
+from backend.routes import users
 
 # 🟢 Montar los routers de la API PRIMERO
 app.include_router(admin.router)
@@ -337,6 +338,7 @@ app.include_router(psychologist.router)
 app.include_router(chat_ws.router)
 app.include_router(chat_rest.router)
 app.include_router(meetings.router)
+app.include_router(users.router)
 
 # 🟢 Servir la carpeta frontend bajo /static para evitar colisiones con la API
 FRONTEND_DIR = ROOT / "app_desktop" / "views"
