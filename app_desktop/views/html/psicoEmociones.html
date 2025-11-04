@@ -1,20 +1,20 @@
-<!app_desktop\views\html\psicoEmociones.html
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Panel Psicólogo - Centro de Emociones</title>
-  <link rel="stylesheet" href="../css/psicoEStyles.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/psicoEStyles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&display=swap" rel="stylesheet" />
 </head>
 <body>
   <div class="container">
     <!-- Sidebar -->
     <aside class="sidebar">
-      <h2 class="logo">PANEL<br><span>PSICOLOGO</span></h2>
+      <h2 class="logo">PANEL<br><span>PSICÓLOGO</span></h2>
       <nav class="menu">
         <a href="psicoPacientes.html" class="menu-item"><i class="fa-solid fa-users"></i> Lista de Pacientes</a>
         <a href="psicoEmociones.html" class="menu-item active"><i class="fa-regular fa-heart"></i> Centro de Emociones</a>
@@ -23,109 +23,90 @@
       </nav>
     </aside>
 
-    <!-- Contenido principal -->
+    <!-- Main content -->
     <main class="main">
       <header class="header">
         <h1>Centro de Emociones</h1>
+
         <div class="header-actions">
           <button class="icon-btn" title="Notificaciones"><i class="fa-regular fa-bell"></i></button>
           <button class="icon-btn" title="Mensajes"><i class="fa-regular fa-envelope"></i></button>
-          <div class="user">
-            <img src="../pictures/user.png" alt="Usuario" class="avatar">
-            <span class="username">Derek Alvarado</span>
+
+          <!-- Usuario actual -->
+          <div class="user" id="userMenu">
+            <img src="../pictures/user.png" alt="Usuario" class="avatar" />
+            <span class="username" id="username">Cargando...</span>
             <i class="fa-solid fa-caret-down"></i>
+
+            <div class="logout-menu" id="logoutMenu" style="display:none;">
+              <button id="logoutBtn">Cerrar sesión</button>
+            </div>
           </div>
         </div>
       </header>
 
+      <!-- Sección de emociones -->
       <section class="emociones-section">
+        <!-- Lista de pacientes -->
         <div class="pacientes-lista">
           <h3>Pacientes</h3>
-          <ul>
-            <li class="paciente active">
-              <img src="../pictures/user.png" alt="paciente">
-              <div>
-                <h4>Alyvia Kelley</h4>
-                <span>Última sesión: 10/10/2025</span>
-              </div>
-            </li>
-            <li class="paciente">
-              <img src="../pictures/user.png" alt="paciente">
-              <div>
-                <h4>Prince Chen</h4>
-                <span>Última sesión: 09/10/2025</span>
-              </div>
-            </li>
-            <li class="paciente">
-              <img src="../pictures/user.png" alt="paciente">
-              <div>
-                <h4>Clayton Charles</h4>
-                <span>Última sesión: 08/10/2025</span>
-              </div>
-            </li>
-            <li class="paciente">
-              <img src="../pictures/user.png" alt="paciente">
-              <div>
-                <h4>Nikolai Schmidt</h4>
-                <span>Última sesión: 06/10/2025</span>
-              </div>
-            </li>
+          <ul id="listaPacientes">
+            <li>Cargando pacientes...</li>
           </ul>
         </div>
 
+        <!-- Detalle de emociones -->
         <div class="emociones-detalles">
-          <h3>Emociones Detectadas - Alyvia Kelley</h3>
-          <div class="emociones-grid">
-            <div class="emocion alegria">
-              <i class="fa-regular fa-face-smile"></i>
-              <p>Alegría</p>
-              <span>45%</span>
-            </div>
-            <div class="emocion tristeza">
-              <i class="fa-regular fa-face-sad-tear"></i>
-              <p>Tristeza</p>
-              <span>25%</span>
-            </div>
-            <div class="emocion enojo">
-              <i class="fa-regular fa-face-angry"></i>
-              <p>Enojo</p>
-              <span>10%</span>
-            </div>
-            <div class="emocion calma">
-              <i class="fa-regular fa-face-meh"></i>
-              <p>Calma</p>
-              <span>20%</span>
-            </div>
+          <h3 id="tituloEmociones">Emociones Detectadas - Selecciona un paciente</h3>
+
+          <div class="emociones-grid" id="emocionesGrid">
+            <p style="grid-column:1/-1;text-align:center;color:#666;">Selecciona un paciente para ver sus emociones.</p>
           </div>
 
-          <div class="emocion-notas">
+          <div class="emocion-notas" id="notasContainer" style="display:none;">
             <h4>Notas del Psicólogo</h4>
-            <p>
-              Alyvia ha mostrado avances positivos en su control emocional. Aunque persisten algunos episodios de tristeza, 
-              se percibe una mejora constante en su estabilidad emocional. Se recomienda mantener el enfoque en terapia cognitivo-conductual.
-            </p>
-            <button class="btn-editar">Generar Reporte</button>
+            <div id="listaNotas"></div>
+            <button class="btn-guardar" id="btnNuevoReporte">Gestionar Reportes</button>
           </div>
-          <!-- 🧾 Formulario para crear reporte -->
-          <div id="crear-reporte" class="reporte-form" style="display:none; margin-top:20px;">
-            <h4>Generar Reporte del Paciente</h4>
-            <label for="paciente">Paciente:</label>
-            <select id="paciente">
-              <option value="">Cargando pacientes...</option>
-            </select>
 
-            <label for="progreso">Progreso (%):</label>
-            <input type="number" id="progreso" min="0" max="100" value="75">
+          <!-- 🧾 Panel de reportes -->
+          <div id="panelReportes" class="reporte-form" style="display:none;">
+            <h4>Reportes del Paciente</h4>
 
-            <label for="resumen">Resumen:</label>
-            <textarea id="resumen" rows="4" placeholder="Escribe un resumen del avance del paciente..."></textarea>
+            <div class="reporte-opciones">
+              <button id="btnDescargarReporte" class="btn-guardar">📄 Descargar Reporte</button>
+              <button id="btnMostrarNuevoReporte" class="btn-guardar">➕ Nuevo Reporte</button>
+            </div>
 
-            <button id="btn-guardar-reporte" class="btn-guardar">Guardar Reporte</button>
+            <!-- Formulario para nuevo reporte -->
+            <div id="nuevoReporteForm" style="display:none; margin-top:15px;">
+              <label for="motivo">Motivo:</label>
+              <input type="text" id="motivo" placeholder="Motivo de la sesión o reporte" />
+
+              <label for="tecnica">Técnica o instrumentos utilizados:</label>
+              <input type="text" id="tecnica" placeholder="Ejemplo: Terapia cognitivo-conductual" />
+
+              <label for="observaciones">Observaciones conductuales:</label>
+              <textarea id="observaciones" rows="3"></textarea>
+
+              <label for="resultados">Resultados e interpretación:</label>
+              <textarea id="resultados" rows="3"></textarea>
+
+              <label for="conclusiones">Conclusiones:</label>
+              <textarea id="conclusiones" rows="3"></textarea>
+
+              <label for="recomendaciones">Recomendaciones:</label>
+              <textarea id="recomendaciones" rows="3"></textarea>
+
+              <button id="btnGuardarReporte" class="btn-guardar">Guardar Reporte</button>
+            </div>
           </div>
         </div>
       </section>
     </main>
   </div>
+
+  <!-- Scripts -->
   <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
   <script src="../js/psicoEmociones.js"></script>
 </body>

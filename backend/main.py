@@ -34,7 +34,7 @@ app = FastAPI(title="🚀 EMOTIA Backend")
 # ========================
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Puedes restringir luego a dominios específicos
+    allow_origins=["*", "file://", "null"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

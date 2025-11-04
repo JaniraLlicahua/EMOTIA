@@ -1,22 +1,20 @@
-# backend/models.py
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Float
 from sqlalchemy.orm import relationship
-from datetime import datetime
+from datetime import datetime, timezone
 from .database import Base
 
 # =============================
-# 👤 USUARIOS (admin, psicólogo, paciente)
+# 👤 USUARIOS
 # =============================
 class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    dni = Column(String, unique=True, nullable=True)  # Documento nacional
+    dni = Column(String, unique=True, nullable=True)
     username = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
     role = Column(String, nullable=False)  # admin / psychologist / patient
 
-    # Datos personales
     first_name = Column(String, nullable=True)
     last_name = Column(String, nullable=True)
     email = Column(String, unique=True, nullable=True)
@@ -28,15 +26,12 @@ class User(Base):
     city = Column(String, nullable=True)
     country = Column(String, nullable=True)
 
-    # Estado y metadatos
-    status = Column(String, default="activo")  # activo / inactivo / bloqueado
-    created_at = Column(DateTime, default=datetime.utcnow)
+    status = Column(String, default="activo")
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
-    # Campos específicos
-    specialty = Column(String, nullable=True)  # solo psicólogos
-    assigned_to = Column(Integer, ForeignKey("users.id"), nullable=True)  # paciente asignado a psicólogo
+    specialty = Column(String, nullable=True)
+    assigned_to = Column(Integer, ForeignKey("users.id"), nullable=True)
 
-    # Relaciones
     psychologist_patients = relationship(
         "Appointment",
         back_populates="psychologist",
@@ -58,11 +53,11 @@ class Appointment(Base):
     psychologist_id = Column(Integer, ForeignKey("users.id"))
     patient_id = Column(Integer, ForeignKey("users.id"))
     scheduled_at = Column(DateTime, nullable=False)
-    status = Column(String, default="pendiente")  # pendiente, completada, cancelada
-    progress = Column(Integer, default=0)  # % de progreso
+    status = Column(String, default="pendiente")
+    progress = Column(Integer, default=0)
     notes = Column(Text, nullable=True)
-    mode = Column(String, default="virtual")  # 👈 nuevo campo
-    created_at = Column(DateTime, default=datetime.utcnow)
+    mode = Column(String, default="virtual")
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     psychologist = relationship("User", foreign_keys=[psychologist_id], back_populates="psychologist_patients")
     patient = relationship("User", foreign_keys=[patient_id], back_populates="patient_appointments")
@@ -75,14 +70,14 @@ class SessionModel(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     appointment_id = Column(Integer, ForeignKey("appointments.id"), nullable=True)
-    started_at = Column(DateTime, default=datetime.utcnow)
+    started_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     ended_at = Column(DateTime, nullable=True)
-    status = Column(String, default="activa")  # activa / cerrada
+    status = Column(String, default="activa")
 
     appointment = relationship("Appointment", backref="sessions")
 
 # =============================
-# 💬 MENSAJES (chat paciente-psicólogo)
+# 💬 MENSAJES (chat)
 # =============================
 class Message(Base):
     __tablename__ = "messages"
@@ -92,22 +87,24 @@ class Message(Base):
     receiver_id = Column(Integer, ForeignKey("users.id"))
     session_id = Column(Integer, ForeignKey("sessions.id"), nullable=True)
     content = Column(Text)
-    sent_at = Column(DateTime, default=datetime.utcnow)
+    sent_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 # =============================
-# 🧾 REPORTES (generados tras sesiones)
+# 🧾 REPORTES
 # =============================
 class Report(Base):
     __tablename__ = "reports"
 
     id = Column(Integer, primary_key=True, index=True)
-    session_id = Column(Integer, ForeignKey("sessions.id"))
-    psychologist_id = Column(Integer, ForeignKey("users.id"))
     patient_id = Column(Integer, ForeignKey("users.id"))
-    summary = Column(Text)
-    progress_percent = Column(Integer, default=0)
-    status = Column(String, default="activo")
-    created_at = Column(DateTime, default=datetime.utcnow)
+    psychologist_id = Column(Integer, ForeignKey("users.id"))
+    motivo = Column(String(255))
+    tecnica = Column(String(255))
+    observaciones = Column(Text)
+    resultados = Column(Text)
+    conclusiones = Column(Text)
+    recomendaciones = Column(Text)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 # =============================
 # 😊 DETECCIONES (emociones captadas por la IA)
@@ -121,5 +118,5 @@ class Detection(Base):
     psychologist_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     image_name = Column(String, nullable=False)
     emotion = Column(String, nullable=False)
-    confidence = Column(String, nullable=False)
-    detected_at = Column(DateTime, default=datetime.utcnow)
+    confidence = Column(Float, nullable=False)
+    detected_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

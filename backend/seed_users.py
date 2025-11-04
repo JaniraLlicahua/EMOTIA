@@ -1,12 +1,20 @@
-# backend/seed_data.py
+# backend/seed_users.py
 from backend.database import SessionLocal
 from backend.models import User
 from backend.main import get_password_hash
+from datetime import datetime
 
 db = SessionLocal()
 
-# Verificar si ya hay usuarios
+print("🌱 Insertando usuarios de ejemplo...")
+
+# Limpiar usuarios previos (opcional, descomenta si deseas reiniciar)
+# db.query(User).delete()
+# db.commit()
+
+# Verificar si ya hay usuarios registrados
 if db.query(User).count() == 0:
+    # === Usuario Admin ===
     admin = User(
         username="admin",
         password_hash=get_password_hash("admin123"),
@@ -14,8 +22,11 @@ if db.query(User).count() == 0:
         first_name="Administrador",
         last_name="General",
         email="admin@emotia.com",
-        status="activo"
+        status="activo",
+        created_at=datetime.utcnow()
     )
+
+    # === Psicólogo ===
     psy = User(
         username="psicologo",
         password_hash=get_password_hash("psico123"),
@@ -24,8 +35,11 @@ if db.query(User).count() == 0:
         last_name="García",
         email="lgarcia@emotia.com",
         specialty="Terapia Cognitiva",
-        status="activo"
+        status="activo",
+        created_at=datetime.utcnow()
     )
+
+    # === Paciente asignado al psicólogo ===
     patient = User(
         username="paciente",
         password_hash=get_password_hash("paciente123"),
@@ -33,13 +47,17 @@ if db.query(User).count() == 0:
         first_name="Ana",
         last_name="Torres",
         email="ana@emotia.com",
-        status="activo"
+        assigned_to=2,  # ID del psicólogo
+        status="activo",
+        created_at=datetime.utcnow()
     )
 
+    # Guardar todos
     db.add_all([admin, psy, patient])
     db.commit()
-    print("✅ Usuarios iniciales creados.")
+
+    print("✅ Usuarios iniciales creados correctamente.")
 else:
-    print("⚠️ Ya existen usuarios, no se insertaron datos.")
+    print("⚠️ Ya existen usuarios, no se insertaron datos nuevos.")
 
 db.close()
