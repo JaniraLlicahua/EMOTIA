@@ -5,6 +5,7 @@ __pycache__/
 
 # Virtual env
 venv/
+venv311/
 .env
 env/
 ENV/
@@ -17,7 +18,7 @@ ENV/
 .DS_Store
 Thumbs.db
 
-# Data (no commitear dataset)
+# Data
 data/
 
 # Logs
