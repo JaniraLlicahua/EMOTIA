@@ -32,12 +32,15 @@ app = FastAPI(title="🚀 EMOTIA Backend")
 # ========================
 # 🌍 CORS (para permitir tu frontend y PyQt)
 # ========================
+from fastapi.middleware.cors import CORSMiddleware
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*", "file://", "null"],
+    allow_origins=["*"],     # permite file://
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # ========================
@@ -192,22 +195,6 @@ def save_detection(payload: DetectionCreate, db: Session = Depends(get_db)):
 def list_detections(db: Session = Depends(get_db)):
     return db.query(Detection).order_by(Detection.id.desc()).all()
 
-
-# ========================
-# 📆 Crear sesiones
-# ========================
-@app.post("/sessions")
-def create_session(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    if current_user.role != "psychologist":
-        raise HTTPException(status_code=403, detail="Solo psicólogos pueden iniciar sesiones")
-
-    session = SessionModel(appointment_id=None)
-    db.add(session)
-    db.commit()
-    db.refresh(session)
-    return {"session_id": session.id, "started_at": session.started_at.isoformat()}
-
-
 # ========================
 # 🌐 WebSocket IA (stream)
 # ========================
@@ -285,41 +272,95 @@ async def ws_predict(websocket: WebSocket, session_id: int):
 # Señalización WebSocket simple (relay)
 SIGNAL_CLIENTS: dict[int, set] = {}
 
-# --- Señalización WebSocket autenticada ---
+# --- Señalización WebSocket autenticada mejorada ---
 from fastapi import WebSocket, WebSocketDisconnect, Query
 import jwt
 
-SECRET_KEY = "clave_super_secreta"
+SECRET_KEY = os.getenv("SECRET_KEY", "clave_super_secreta")
 ALGORITHM = "HS256"
+
+# estructura: SIGNAL_CLIENTS[session_id] = { "psychologist": set(ws,...), "patient": set(ws,...) }
 SIGNAL_CLIENTS = {}
+
+# guardamos role por websocket para poder filtrar quien envía
+WS_ROLE_MAP = {}  # key: id(ws) -> "psychologist"/"patient"
 
 @app.websocket("/ws/signal/{session_id}")
 async def ws_signal(websocket: WebSocket, session_id: int, token: str = Query(None)):
-    """Canal WebRTC autenticado"""
+    """
+    Señalización simples: reenviamos `offer/answer/candidate` SOLO a la otra parte.
+    Se asume que el token JWT incluye "role": "psychologist" | "patient" y "sub".
+    """
+    # validar token y extraer role
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user = payload.get("sub")
         role = payload.get("role")
+        if role not in ("psychologist", "patient"):
+            await websocket.close(code=4003)
+            return
     except Exception:
-        await websocket.close(code=4001)
+        try:
+            await websocket.close(code=4001)
+        except:
+            pass
         return
 
     await websocket.accept()
     sid = int(session_id)
+
+    # asegurar estructura
     if sid not in SIGNAL_CLIENTS:
-        SIGNAL_CLIENTS[sid] = set()
-    SIGNAL_CLIENTS[sid].add(websocket)
+        SIGNAL_CLIENTS[sid] = {"psychologist": set(), "patient": set()}
+
+    SIGNAL_CLIENTS[sid][role].add(websocket)
+    WS_ROLE_MAP[id(websocket)] = role
+
     print(f"✅ {user} ({role}) conectado a señal {sid}")
 
     try:
         while True:
-            msg = await websocket.receive_text()
-            for c in list(SIGNAL_CLIENTS[sid]):
-                if c != websocket:
-                    await c.send_text(msg)
+            txt = await websocket.receive_text()
+            # intentar parsear JSON
+            try:
+                msg = json.loads(txt)
+            except Exception:
+                # ignorar mensajes no JSON
+                continue
+
+            # msg expected to contain at least {"type":"offer"|"answer"|"candidate", ...}
+            mtype = msg.get("type")
+            # reenviar a la otra parte solamente
+            other_role = "psychologist" if role == "patient" else "patient"
+            clients = list(SIGNAL_CLIENTS[sid].get(other_role, []))
+
+            # Enviar a cada cliente de la otra parte (no al emisor)
+            for c in clients:
+                try:
+                    # evita enviar el mensaje de vuelta al mismo websocket por ID (por defecto no está en other_role)
+                    await c.send_text(json.dumps(msg))
+                except Exception:
+                    # si falla, eliminar
+                    try:
+                        SIGNAL_CLIENTS[sid][other_role].discard(c)
+                    except:
+                        pass
+
     except WebSocketDisconnect:
-        SIGNAL_CLIENTS[sid].discard(websocket)
-        print(f"👋 {user} desconectado de señal {sid}")
+        # limpiar on disconnect
+        SIGNAL_CLIENTS[sid][role].discard(websocket)
+        WS_ROLE_MAP.pop(id(websocket), None)
+        print(f"👋 {user} ({role}) desconectado de señal {sid}")
+
+    except Exception as err:
+        # en caso de error inesperado, limpiar
+        SIGNAL_CLIENTS[sid][role].discard(websocket)
+        WS_ROLE_MAP.pop(id(websocket), None)
+        print(f"❌ Error señal {sid} ({role}):", err)
+        try:
+            await websocket.close()
+        except:
+            pass
 
 # Importar routers (mantener como antes)
 from backend.routes import admin
@@ -329,6 +370,8 @@ from backend.routes import psychologist
 from backend.routes import chat_ws, chat_rest
 from backend.routes import meetings
 from backend.routes import users
+from backend.routes import sessions
+
 
 # 🟢 Montar los routers de la API PRIMERO
 app.include_router(admin.router)
@@ -339,6 +382,8 @@ app.include_router(chat_ws.router)
 app.include_router(chat_rest.router)
 app.include_router(meetings.router)
 app.include_router(users.router)
+app.include_router(sessions.router)
+
 
 # 🟢 Servir la carpeta frontend bajo /static para evitar colisiones con la API
 FRONTEND_DIR = ROOT / "app_desktop" / "views"

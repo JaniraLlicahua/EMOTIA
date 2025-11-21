@@ -268,3 +268,45 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== Mejoras visuales calendario ===== */
+.calendar-section {
+  position: relative;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+}
+
+.calendar-header {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.calendar {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  padding-bottom: 10px;
+}
+
+.weekdays div {
+  font-weight: 600;
+  color: #333;
+}
+
+.details {
+  align-self: start;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+}
+
+.session.active {
+  background: #e9f7ef;
+  border-left: 4px solid #4caf50;
+}

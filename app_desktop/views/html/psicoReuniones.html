@@ -1,3 +1,4 @@
+#app_desktop\views\html\psicoReuniones.html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -77,8 +78,10 @@
   <div id="modalReunion" class="modal">
     <div class="modal-content">
       <h2>Crear Nueva Reunión</h2>
-      <label>Paciente (ID):</label>
-      <input type="number" id="patientId" placeholder="Ej: 3" />
+      <label>Paciente:</label>
+      <select id="patientSelector">
+        <option value="">Cargando pacientes...</option>
+      </select>
 
       <label>Fecha:</label>
       <input type="date" id="date" />

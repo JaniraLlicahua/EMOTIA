@@ -1,3 +1,4 @@
+# app_desktop/main_app.py
 import sys, os
 from PyQt5.QtCore import QUrl, QObject, pyqtSignal, pyqtSlot
 from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox

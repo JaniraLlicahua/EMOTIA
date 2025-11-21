@@ -13,23 +13,23 @@ class User(Base):
     dni = Column(String, unique=True, nullable=True)
     username = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
-    role = Column(String, nullable=False)  # admin / psychologist / patient
+    role = Column(String, nullable=False)
 
-    first_name = Column(String, nullable=True)
-    last_name = Column(String, nullable=True)
-    email = Column(String, unique=True, nullable=True)
-    gender = Column(String, nullable=True)
-    birth_date = Column(DateTime, nullable=True)
-    photo_url = Column(String, nullable=True)
-    phone = Column(String, nullable=True)
-    address = Column(String, nullable=True)
-    city = Column(String, nullable=True)
-    country = Column(String, nullable=True)
+    first_name = Column(String)
+    last_name = Column(String)
+    email = Column(String, unique=True)
+    gender = Column(String)
+    birth_date = Column(DateTime)
+    photo_url = Column(String)
+    phone = Column(String)
+    address = Column(String)
+    city = Column(String)
+    country = Column(String)
 
     status = Column(String, default="activo")
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
-    specialty = Column(String, nullable=True)
+    specialty = Column(String)
     assigned_to = Column(Integer, ForeignKey("users.id"), nullable=True)
 
     psychologist_patients = relationship(
@@ -43,8 +43,9 @@ class User(Base):
         foreign_keys="Appointment.patient_id"
     )
 
+
 # =============================
-# 📅 CITAS / SESIONES TERAPÉUTICAS
+# 📅 CITAS
 # =============================
 class Appointment(Base):
     __tablename__ = "appointments"
@@ -52,32 +53,56 @@ class Appointment(Base):
     id = Column(Integer, primary_key=True, index=True)
     psychologist_id = Column(Integer, ForeignKey("users.id"))
     patient_id = Column(Integer, ForeignKey("users.id"))
+
     scheduled_at = Column(DateTime, nullable=False)
     status = Column(String, default="pendiente")
     progress = Column(Integer, default=0)
-    notes = Column(Text, nullable=True)
+    notes = Column(Text)
     mode = Column(String, default="virtual")
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
-    psychologist = relationship("User", foreign_keys=[psychologist_id], back_populates="psychologist_patients")
-    patient = relationship("User", foreign_keys=[patient_id], back_populates="patient_appointments")
+    real_session_id = Column(Integer, nullable=True)
+
+    psychologist = relationship(
+        "User",
+        foreign_keys=[psychologist_id],
+        back_populates="psychologist_patients"
+    )
+
+    patient = relationship(
+        "User",
+        foreign_keys=[patient_id],
+        back_populates="patient_appointments"
+    )
+
+    appointment_session = relationship(
+        "SessionModel",
+        back_populates="appointment",
+        uselist=False
+    )
+
 
 # =============================
-# 🧠 SESIÓN ACTIVA EN VIVO
+# 🧠 SESIÓN ACTIVA
 # =============================
 class SessionModel(Base):
     __tablename__ = "sessions"
 
     id = Column(Integer, primary_key=True, index=True)
-    appointment_id = Column(Integer, ForeignKey("appointments.id"), nullable=True)
+    appointment_id = Column(Integer, ForeignKey("appointments.id"))
     started_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    ended_at = Column(DateTime, nullable=True)
+    ended_at = Column(DateTime)
     status = Column(String, default="activa")
 
-    appointment = relationship("Appointment", backref="sessions")
+    # 🔥 SOLO UNA RELACIÓN PERMITIDA
+    appointment = relationship(
+        "Appointment",
+        back_populates="appointment_session"
+    )
+
 
 # =============================
-# 💬 MENSAJES (chat)
+# 💬 MENSAJES
 # =============================
 class Message(Base):
     __tablename__ = "messages"
@@ -85,9 +110,10 @@ class Message(Base):
     id = Column(Integer, primary_key=True, index=True)
     sender_id = Column(Integer, ForeignKey("users.id"))
     receiver_id = Column(Integer, ForeignKey("users.id"))
-    session_id = Column(Integer, ForeignKey("sessions.id"), nullable=True)
+    session_id = Column(Integer, ForeignKey("sessions.id"))
     content = Column(Text)
     sent_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
 
 # =============================
 # 🧾 REPORTES
@@ -106,16 +132,17 @@ class Report(Base):
     recomendaciones = Column(Text)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
+
 # =============================
-# 😊 DETECCIONES (emociones captadas por la IA)
+# 😊 DETECCIONES IA
 # =============================
 class Detection(Base):
     __tablename__ = "detections"
 
     id = Column(Integer, primary_key=True, index=True)
-    session_id = Column(Integer, ForeignKey("sessions.id"), nullable=True)
-    patient_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    psychologist_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    session_id = Column(Integer, ForeignKey("sessions.id"))
+    patient_id = Column(Integer, ForeignKey("users.id"))
+    psychologist_id = Column(Integer, ForeignKey("users.id"))
     image_name = Column(String, nullable=False)
     emotion = Column(String, nullable=False)
     confidence = Column(Float, nullable=False)

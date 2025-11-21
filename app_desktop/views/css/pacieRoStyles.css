@@ -51,3 +51,7 @@ video {
 .controls button[style] { 
     background:#e53935; 
 }
+
+#btnMic {
+    background:#2196F3;
+}
