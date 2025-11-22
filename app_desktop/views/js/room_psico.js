@@ -1,4 +1,4 @@
-// room_psico.js (Perfect Negotiation - psicólogo, polite)
+// room_psico.js (Perfect Negotiation - psicólogo, elegante y completo)
 (() => {
     const SIGNAL_HOST = "ws://127.0.0.1:8000";
     const PREDICT_HOST = "ws://127.0.0.1:8000";
@@ -31,283 +31,243 @@
     let micEnabled = true;
     let tracksAdded = false;
 
-    // Perfect negotiation flags
     let makingOffer = false;
     let ignoreOffer = false;
-    const polite = true; // psicólogo = polite
+    const polite = true;
 
     const emotionStats = {};
     const recentPred = [];
+    let lastAlertEmotion = null;
+
     const PERSIST_SECONDS = 8;
     const PERSIST_COUNT = 4;
-    let lastAlertEmotion = null;
 
     const ICE = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-    // Chart.js setup
+    // 🎨 COLORES DEL GRÁFICO (elegantes)
+    const emotionColors = {
+        happy: "#3ECF8E",
+        sad: "#5C7AEA",
+        angry: "#FF6B6B",
+        disgust: "#C3E88D",
+        fear: "#9E6EF3",
+        neutral: "#A1AAB3",
+        surprise: "#FFD54F"
+    };
+
     let chart = null;
     const chartLabels = [];
     const chartData = [];
+    const chartColors = [];
 
     function createChart() {
-        const ctx = document.getElementById('emotionChart').getContext('2d');
+        const ctx = document.getElementById("emotionChart").getContext("2d");
+
         chart = new Chart(ctx, {
-            type: 'bar',
+            type: "bar",
             data: {
                 labels: chartLabels,
                 datasets: [{
-                    label: 'Conteo',
+                    label: "Conteo",
                     data: chartData,
+                    backgroundColor: chartColors,
+                    borderRadius: 6
                 }]
             },
             options: {
-                animation: { duration: 300 },
                 responsive: true,
-                scales: { y: { beginAtZero: true } }
+                animation: { duration: 350 },
+                scales: {
+                    y: { beginAtZero: true },
+                    x: { ticks: { color: "#fff" } }
+                },
+                plugins: {
+                    legend: { labels: { color: "#eee" } }
+                }
             }
         });
     }
 
     function refreshChartFromStats() {
-        const entries = Object.entries(emotionStats).sort((a,b)=>b[1]-a[1]);
+        const entries = Object.entries(emotionStats).sort((a, b) => b[1] - a[1]);
+
         chartLabels.length = 0;
         chartData.length = 0;
-        for (const [k,v] of entries) {
-            chartLabels.push(k);
-            chartData.push(v);
+        chartColors.length = 0;
+
+        for (const [emotion, count] of entries) {
+            chartLabels.push(emotion);
+            chartData.push(count);
+            chartColors.push(emotionColors[emotion] || "#aaa");
         }
+
         if (chart) chart.update();
     }
 
-    // ---------- SIGNAL ----------
+    // 🔵 WebSocket estable con reconexión
     function createWebSocket(url, name, onOpen, onMessage, onClose, onError) {
         let ws = null;
         let attempts = 0;
+
         function connect() {
             attempts++;
             try {
                 ws = new WebSocket(url);
-            } catch (err) {
-                console.warn(`${name} WS create error`, err);
+            } catch (e) {
                 scheduleReconnect();
                 return;
             }
-            ws.onopen = (ev) => {
+
+            ws.onopen = () => {
                 attempts = 0;
-                console.log(`${name} WS open`);
-                if (onOpen) onOpen(ev);
+                if (onOpen) onOpen();
             };
-            ws.onmessage = (ev) => { if (onMessage) onMessage(ev); };
-            ws.onclose = (ev) => {
-                console.log(`${name} WS closed`, ev.code, ev.reason);
-                if (onClose) onClose(ev);
-                scheduleReconnect();
-            };
-            ws.onerror = (ev) => {
-                console.warn(`${name} WS error`, ev);
-                if (onError) onError(ev);
-            };
+            ws.onmessage = (e) => onMessage?.(e);
+            ws.onclose = () => { onClose?.(); scheduleReconnect(); };
+            ws.onerror = (e) => onError?.(e);
         }
+
         function scheduleReconnect() {
-            const backoff = Math.min(16000, 1000 * 2 ** attempts);
-            console.log(`${name} WS reconectando en ${backoff}ms (intento ${attempts})`);
-            setTimeout(connect, backoff);
+            const delay = Math.min(15000, attempts * 1500);
+            setTimeout(connect, delay);
         }
+
         connect();
+
         return {
             get raw() { return ws; },
-            close() { try { ws?.close(); } catch(_) {} }
+            close() { ws?.close(); }
         };
     }
 
     function openSignalSocket() {
-        if (signalSocket && signalSocket.raw && signalSocket.raw.readyState === WebSocket.OPEN) return;
-
         const url = `${SIGNAL_HOST}/ws/signal/${sessionId}?token=${encodeURIComponent(token)}`;
-        signalSocket = createWebSocket(url, "Signal",
-            () => console.log("Signal conectado (psych)"),
+
+        signalSocket = createWebSocket(
+            url,
+            "Signal",
+            () => console.log("Signal abierto"),
             async (ev) => {
                 try {
-                    const data = JSON.parse(ev.data);
-                    await handleSignalMessage(data);
-                } catch (err) {
-                    console.error("Error en signal (psych):", err);
-                }
-            },
-            () => console.log("Signal socket (psych) cerrado"),
-            (e) => console.warn("Signal socket error (psych):", e)
+                    const msg = JSON.parse(ev.data);
+                    await handleSignalMessage(msg);
+                } catch (e) {}
+            }
         );
     }
 
-    function sendSignal(msg) {
-        try {
-            const raw = signalSocket?.raw;
-            if (raw && raw.readyState === WebSocket.OPEN) raw.send(JSON.stringify(msg));
-        } catch (err) { console.warn("sendSignal err", err); }
-    }
-
+    // 📡 Manejo de signaling (Perfect Negotiation)
     async function handleSignalMessage(msg) {
         if (!pc) await createPeerConnection();
 
         if (msg.type === "offer") {
-            const offerCollision = makingOffer || pc.signalingState !== "stable";
-            ignoreOffer = !polite && offerCollision;
-            if (ignoreOffer) {
-                console.warn("Offer collision - impolite and collision -> ignoring incoming offer (psych)");
-                return;
-            }
+            const collision = makingOffer || pc.signalingState !== "stable";
+            ignoreOffer = !polite && collision;
+
+            if (ignoreOffer) return;
+
             try {
                 await pc.setRemoteDescription(msg);
-                // psych: when receive offer, create answer
                 const answer = await pc.createAnswer();
                 await pc.setLocalDescription(answer);
                 sendSignal(pc.localDescription);
-            } catch (err) {
-                console.error("Error applying remote offer (psych):", err);
-                try {
-                    await pc.setLocalDescription({ type: "rollback" });
-                    await pc.setRemoteDescription(msg);
-                } catch (e) {
-                    console.error("Rollback failed (psych):", e);
-                }
-            }
-        } else if (msg.type === "answer") {
-            try {
-                await pc.setRemoteDescription(msg);
-            } catch (err) {
-                console.error("Error applying answer (psych):", err);
-            }
-        } else if (msg.type === "candidate") {
-            try {
-                if (msg.candidate) await pc.addIceCandidate(msg.candidate);
-            } catch (err) {
-                console.warn("addIceCandidate (psych) failed:", err);
-            }
-        } else {
-            console.log("Signal (psych) recibido:", msg.type);
+            } catch (err) { }
+        }
+
+        if (msg.type === "answer") {
+            await pc.setRemoteDescription(msg);
+        }
+
+        if (msg.type === "candidate" && msg.candidate) {
+            try { await pc.addIceCandidate(msg.candidate); }
+            catch { }
         }
     }
 
-    // ---------- PEER ----------
+    function sendSignal(msg) {
+        signalSocket?.raw?.send(JSON.stringify(msg));
+    }
+
+    // 🔵 WebRTC
     async function createPeerConnection() {
         if (pc) return;
+
         pc = new RTCPeerConnection(ICE);
 
         pc.ontrack = (ev) => {
-            if (ev.streams && ev.streams[0]) {
-                remoteVideo.srcObject = ev.streams[0];
-            } else {
-                const st = new MediaStream();
-                st.addTrack(ev.track);
-                remoteVideo.srcObject = st;
-            }
+            remoteVideo.srcObject = ev.streams[0];
         };
 
-        pc.onicecandidate = (e) => {
-            if (e.candidate) sendSignal({ type: "candidate", candidate: e.candidate });
-        };
-
-        pc.onconnectionstatechange = () => {
-            console.log("PC state (psych):", pc.connectionState);
+        pc.onicecandidate = (ev) => {
+            if (ev.candidate) sendSignal({ type: "candidate", candidate: ev.candidate });
         };
 
         pc.onnegotiationneeded = async () => {
             try {
                 makingOffer = true;
-                // only create offer if we actually have local tracks to send
                 if (localStream) {
                     const offer = await pc.createOffer();
                     await pc.setLocalDescription(offer);
                     sendSignal(pc.localDescription);
                 }
-            } catch (err) {
-                console.warn("negotiationneeded error (psych):", err);
             } finally {
                 makingOffer = false;
             }
         };
 
         if (localStream && !tracksAdded) {
-            localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+            localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
             tracksAdded = true;
         }
     }
 
-    // ---------- CAM / MICRO ----------
-    async function ensureLocalStream() {
-        if (localStream) return localStream;
-        try {
-            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            localVideo.srcObject = localStream;
-            tracksAdded = false;
-            return localStream;
-        } catch (err) {
-            console.error("getUserMedia psych:", err);
-            throw err;
-        }
-    }
-
+    // 🎥 Cámara
     async function toggleCam() {
         if (!localStream) {
-            try {
-                await ensureLocalStream();
-                await createPeerConnection();
+            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            localVideo.srcObject = localStream;
 
-                if (!tracksAdded) {
-                    localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
-                    tracksAdded = true;
-                }
-                openSignalSocket();
-                // force negotiation if we added tracks
-                try {
-                    makingOffer = true;
-                    const offer = await pc.createOffer();
-                    await pc.setLocalDescription(offer);
-                    sendSignal(pc.localDescription);
-                } catch (err) {
-                    console.warn("Force offer error (psych):", err);
-                } finally {
-                    makingOffer = false;
-                }
+            await createPeerConnection();
 
-                // psicólogo también escucha predicciones
-                openPredictSocket();
+            localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
+            tracksAdded = true;
 
-                btnCam.classList.add("on");
-            } catch (e) {
-                alert("No se pudo acceder a la cámara (psych). Revisa permisos.");
-            }
+            openPredictSocket();
+            btnCam.classList.add("on");
         } else {
             localStream.getTracks().forEach(t => t.stop());
-            localStream = null;
             localVideo.srcObject = null;
+            localStream = null;
             btnCam.classList.remove("on");
         }
     }
 
+    // 🎤 Micrófono
     function toggleMic() {
         if (!localStream) return;
+
         micEnabled = !micEnabled;
         localStream.getAudioTracks().forEach(t => t.enabled = micEnabled);
-        btnMic.innerHTML = micEnabled ? '<i class="fa-solid fa-microphone"></i>' : '<i class="fa-solid fa-microphone-slash"></i>';
+
+        btnMic.innerHTML = micEnabled
+            ? '<i class="fa-solid fa-microphone"></i>'
+            : '<i class="fa-solid fa-microphone-slash"></i>';
     }
 
-    // ---------- PREDICT socket (psych listens for predictions) ----------
+    // 🔮 SOCKET DE PREDICCIÓN
     function openPredictSocket() {
-        if (predictSocket && predictSocket.raw && predictSocket.raw.readyState === WebSocket.OPEN) return;
         const url = `${PREDICT_HOST}/ws/predict/${sessionId}?token=${encodeURIComponent(token)}`;
-        predictSocket = createWebSocket(url, "Predict",
-            () => console.log("Predict WS abierto (psych)"),
+
+        predictSocket = createWebSocket(
+            url,
+            "Predict",
+            () => {},
             (ev) => {
                 try {
                     const data = JSON.parse(ev.data);
                     if (data.type === "prediction") handlePrediction(data);
-                } catch (err) {
-                    console.warn("predict parse error:", err);
-                }
-            },
-            () => console.log("Predict WS cerrado (psych)"),
-            (e) => console.warn("Predict WS error (psych)", e)
+                } catch {}
+            }
         );
     }
 
@@ -316,10 +276,12 @@
         emotionStats[pred.emotion] = (emotionStats[pred.emotion] || 0) + 1;
 
         recentPred.push({ emotion: pred.emotion, t: now });
+
         const cutoff = now - PERSIST_SECONDS * 1000;
         while (recentPred.length && recentPred[0].t < cutoff) recentPred.shift();
 
         const same = recentPred.filter(p => p.emotion === pred.emotion).length;
+
         if (same >= PERSIST_COUNT && lastAlertEmotion !== pred.emotion) {
             showAlert(pred.emotion);
             lastAlertEmotion = pred.emotion;
@@ -330,9 +292,9 @@
         refreshChartFromStats();
     }
 
-    function showAlert(emotion) {
+    function showAlert(e) {
         alertOverlay.style.display = "flex";
-        alertOverlay.querySelector(".alert-box").textContent = `⚠️ Emoción persistente: ${emotion}`;
+        alertOverlay.querySelector(".alert-box").textContent = `⚠️ Emoción persistente: ${e}`;
         setTimeout(() => alertOverlay.style.display = "none", 6000);
     }
 
@@ -342,48 +304,36 @@
             .join(" · ");
     }
 
-    // ---------- Finalizar sesión -> generar PDF con emociones + notas ----------
+    // 📄 Finalizar sesión → Reporte PDF
     async function endSessionAndGenerateReport() {
-        try {
-            const notes = notesEl.value || "";
-            const payload = {
-                session_id: Number(sessionId),
-                notes,
-            };
-            const res = await fetch(`${API_HOST}/reports/generate`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                },
-                body: JSON.stringify(payload)
-            });
-            if (!res.ok) {
-                const txt = await res.text();
-                alert("Error generando reporte: " + txt);
-                return;
-            }
-            const blob = await res.blob();
-            const url = URL.createObjectURL(blob);
-            window.open(url, "_blank");
-        } catch (err) {
-            console.error("Error generando reporte:", err);
-            alert("Error generando reporte.");
-        } finally {
-            try { signalSocket?.close(); } catch(_) {}
-            try { predictSocket?.close(); } catch(_) {}
-            window.location.href = "../html/psicoReuniones.html";
+        const notes = notesEl.value;
+
+        const res = await fetch(`${API_HOST}/reports/generate`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ session_id: Number(sessionId), notes })
+        });
+
+        if (!res.ok) {
+            alert("Error generando reporte");
+            return;
         }
+
+        const blob = await res.blob();
+        window.open(URL.createObjectURL(blob), "_blank");
+
+        window.location.href = "../html/psicoReuniones.html";
     }
 
-    // ---------- UI events ----------
+    // 🎛️ Botones
     btnHangup.addEventListener("click", endSessionAndGenerateReport);
-    btnCam.addEventListener("click", async () => {
-        await toggleCam();
-    });
+    btnCam.addEventListener("click", toggleCam);
     btnMic.addEventListener("click", toggleMic);
 
-    // iniciar sockets / chart
+    // Inicializar
     createChart();
     openSignalSocket();
     openPredictSocket();

@@ -247,25 +247,38 @@ SESSION_CLIENTS: dict[int, set] = {}
 
 @app.websocket("/ws/predict/{session_id}")
 async def ws_predict(websocket: WebSocket, session_id: int):
-    await websocket.accept()
+    try:
+        await websocket.accept()
+    except:
+        return
+
     sid = int(session_id)
+
     if sid not in SESSION_CLIENTS:
         SESSION_CLIENTS[sid] = set()
+
     SESSION_CLIENTS[sid].add(websocket)
+
     try:
         while True:
-            data = await websocket.receive_json()
+            try:
+                data = await websocket.receive_json()
+            except Exception:
+                break
+
             if data.get("type") == "frame":
                 b64 = data.get("data").split(",")[-1]
                 frame_bytes = base64.b64decode(b64)
+
                 pred = predict_from_bytes(frame_bytes)
                 if pred:
                     payload = {"type": "prediction", **pred}
                     for client in list(SESSION_CLIENTS.get(sid, [])):
                         try:
                             await client.send_json(payload)
-                        except Exception:
+                        except:
                             SESSION_CLIENTS[sid].discard(client)
+
     except WebSocketDisconnect:
         SESSION_CLIENTS[sid].discard(websocket)
 
