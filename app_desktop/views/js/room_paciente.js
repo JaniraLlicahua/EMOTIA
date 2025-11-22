@@ -1,9 +1,8 @@
-// app_desktop/views/js/room_paciente.js
+// room_paciente.js (Perfect Negotiation - paciente, impolite)
 (() => {
     const SIGNAL_HOST = "ws://127.0.0.1:8000";
     const PREDICT_HOST = "ws://127.0.0.1:8000";
 
-    // usar real_session_id guardado desde backend cuando se inició la sesión
     const sessionId = localStorage.getItem("real_session_id");
     const token = localStorage.getItem("token");
 
@@ -26,6 +25,11 @@
     let micEnabled = true;
     let sendInterval = null;
     let tracksAdded = false;
+
+    // Perfect negotiation flags
+    let makingOffer = false;
+    let ignoreOffer = false;
+    const polite = false; // paciente = impolite
 
     const ICE = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
@@ -56,7 +60,6 @@
             ws.onerror = (ev) => {
                 console.warn(`${name} WS error`, ev);
                 if (onError) onError(ev);
-                // error -> will trigger close eventually
             };
         }
         function scheduleReconnect() {
@@ -71,7 +74,7 @@
         };
     }
 
-    // ---------- SIGNAL (relay) ----------
+    // ---------- SIGNAL (relay, Perfect Negotiation) ----------
     function openSignalSocket() {
         if (signalSocket && signalSocket.raw && signalSocket.raw.readyState === WebSocket.OPEN) return;
 
@@ -81,20 +84,7 @@
             async (ev) => {
                 try {
                     const data = JSON.parse(ev.data);
-                    if (!pc) {
-                        console.log("Signal: no pc aún, creando...");
-                        await createPeerConnection();
-                    }
-                    // tipos: answer, candidate (paciente espera answer)
-                    if (data.type === "answer") {
-                        // Some servers send full SDP object, ensure correct structure
-                        await pc.setRemoteDescription(data);
-                        console.log("Signal: answer aplicado");
-                    } else if (data.type === "candidate") {
-                        await pc.addIceCandidate(data.candidate);
-                    } else {
-                        console.log("Signal (patient) mensaje desconocido:", data.type);
-                    }
+                    await handleSignalMessage(data);
                 } catch (err) {
                     console.error("Error manejando mensaje de señal (patient):", err);
                 }
@@ -111,13 +101,57 @@
         } catch (err) { console.warn("sendSignal err", err); }
     }
 
-    // ---------- PEER CONNECTION ----------
+    async function handleSignalMessage(msg) {
+        // Mensajes: offer / answer / candidate
+        if (!pc) await createPeerConnection();
+
+        if (msg.type === "offer") {
+            // Perfect negotiation: detect collision
+            const offerCollision = makingOffer || pc.signalingState !== "stable";
+            ignoreOffer = !polite && offerCollision;
+            if (ignoreOffer) {
+                console.warn("Offer collision - impolite and collision -> ignoring incoming offer");
+                return;
+            }
+            try {
+                await pc.setRemoteDescription(msg);
+                // as patient, when receive offer, create answer
+                const answer = await pc.createAnswer();
+                await pc.setLocalDescription(answer);
+                sendSignal(pc.localDescription);
+            } catch (err) {
+                console.error("Error applying remote offer (patient):", err);
+                // try rollback if possible
+                try {
+                    await pc.setLocalDescription({ type: "rollback" });
+                    await pc.setRemoteDescription(msg);
+                } catch (e) {
+                    console.error("Rollback failed (patient):", e);
+                }
+            }
+        } else if (msg.type === "answer") {
+            try {
+                await pc.setRemoteDescription(msg);
+            } catch (err) {
+                console.error("Error applying answer (patient):", err);
+            }
+        } else if (msg.type === "candidate") {
+            try {
+                if (msg.candidate) await pc.addIceCandidate(msg.candidate);
+            } catch (err) {
+                console.warn("addIceCandidate (patient) failed:", err);
+            }
+        } else {
+            console.log("Signal (patient) mensaje desconocido:", msg.type);
+        }
+    }
+
+    // ---------- PEER CONNECTION (patient) ----------
     async function createPeerConnection() {
         if (pc) return;
         pc = new RTCPeerConnection(ICE);
 
         pc.ontrack = (ev) => {
-            // mostrar la pista remota en grande
             if (ev.streams && ev.streams[0]) {
                 remoteVideo.srcObject = ev.streams[0];
             } else {
@@ -132,50 +166,41 @@
         };
 
         pc.onconnectionstatechange = () => {
-            console.log("PC state:", pc.connectionState);
-            if (pc.connectionState === "failed" || pc.connectionState === "disconnected") {
-                // intenta recrear? por ahora lo dejamos manejado por WS reconexión
-                console.warn("PeerConnection falló:", pc.connectionState);
-            }
+            console.log("PC state (patient):", pc.connectionState);
         };
 
-        // paciente inicia offer cuando se necesita negociación
+        // Perfect negotiation: set makingOffer flag around createOffer
         pc.onnegotiationneeded = async () => {
             try {
-                await startOffer();
+                makingOffer = true;
+                const offer = await pc.createOffer();
+                // if signalingState not stable, will be handled by collision logic on remote
+                await pc.setLocalDescription(offer);
+                sendSignal(pc.localDescription);
             } catch (err) {
-                console.warn("Error en negotiationneeded:", err);
+                console.warn("Error en negotiationneeded (patient):", err);
+            } finally {
+                makingOffer = false;
             }
         };
 
-        // si tenemos stream local, añadir tracks (una sola vez)
         if (localStream && !tracksAdded) {
             localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
             tracksAdded = true;
         }
     }
 
-    async function startOffer() {
-        await createPeerConnection();
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-        sendSignal(pc.localDescription || offer);
-        console.log("Offer enviada");
-    }
-
     // ---------- CAM / MICRO ----------
-
     async function ensureLocalStream() {
         if (localStream) return localStream;
         try {
             localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            // mini local: estilo flotante (draggable)
             makeLocalVideoFloating();
             localVideo.srcObject = localStream;
-            tracksAdded = false; // para forzar re-add en pc
+            tracksAdded = false;
             return localStream;
         } catch (err) {
-            console.error("getUserMedia error:", err);
+            console.error("getUserMedia error (patient):", err);
             throw err;
         }
     }
@@ -186,15 +211,13 @@
                 await ensureLocalStream();
                 openSignalSocket();
                 await createPeerConnection();
-                // añadir tracks al pc
+
                 if (!tracksAdded) {
                     localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
                     tracksAdded = true;
                 }
-                // trigger negotiation (onnegotiationneeded fires)
-                await startOffer();
-
-                // inicio envío de frames a predicción
+                // trigger negotiation if needed (onnegotiationneeded will run)
+                // start sending frames to prediction
                 startSendingFrames();
                 btnCam.textContent = "Desactivar cámara";
                 btnCam.classList.add("on");
@@ -208,12 +231,11 @@
             localVideo.srcObject = null;
             tracksAdded = false;
 
-            // cerrar pc (pero dejar signal reconectar en caso de reingreso)
             try { pc?.close(); } catch(_) {}
             pc = null;
 
             clearInterval(sendInterval);
-            predictSocket?.close();
+            try { predictSocket?.close(); } catch(_) {}
 
             btnCam.textContent = "Activar cámara";
             btnCam.classList.remove("on");
@@ -229,29 +251,21 @@
 
     // ---------- PREDICTION (solo paciente envía frames) ----------
     function startSendingFrames() {
-        if (predictSocket && predictSocket.raw && predictSocket.raw.readyState === WebSocket.OPEN) {
-            // ya conectado
-        } else {
+        if (!predictSocket || !predictSocket.raw || predictSocket.raw.readyState !== WebSocket.OPEN) {
             const url = `${PREDICT_HOST}/ws/predict/${sessionId}?token=${encodeURIComponent(token)}`;
             predictSocket = createWebSocket(url, "Predict",
                 () => console.log("Predict WS abierto (patient)"),
-                (ev) => {
-                    // paciente no espera predictions de sí mismo (pero server reenvía a todos),
-                    // no hacemos nada especial aquí en paciente UI.
-                    // Si quieres puedes mostrar feedback local.
-                },
+                (ev) => { /* paciente no necesita manejar predicciones aquí */ },
                 () => console.log("Predict WS cerrado (patient)"),
                 (e) => console.warn("Predict WS error (patient)", e)
             );
         }
 
-        // canvas para capturar frames del video local
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
         canvas.width = 320;
         canvas.height = 240;
 
-        // asegúrate de no crear múltiples intervalos
         clearInterval(sendInterval);
         sendInterval = setInterval(() => {
             if (!localStream || !localVideo || localVideo.videoWidth === 0) return;
@@ -263,15 +277,14 @@
                     raw.send(JSON.stringify({ type: "frame", data: frame }));
                 }
             } catch (err) {
-                console.warn("Error enviando frame predict:", err);
+                console.warn("Error enviando frame predict (patient):", err);
             }
         }, 900);
     }
 
-    // ---------- UI: mini local draggable (OPCION C) ----------
+    // ---------- UI: mini local draggable ----------
     function makeLocalVideoFloating() {
         const v = localVideo;
-        // estilos para flotar y poder arrastrar
         Object.assign(v.style, {
             position: "fixed",
             right: "16px",
@@ -285,7 +298,6 @@
             boxShadow: "0 4px 12px rgba(0,0,0,0.25)"
         });
 
-        // simple drag
         let dragging = false, offsetX = 0, offsetY = 0;
         v.addEventListener("pointerdown", (e) => {
             dragging = true;
@@ -297,7 +309,6 @@
             if (!dragging) return;
             let left = e.clientX - offsetX;
             let top = e.clientY - offsetY;
-            // limit dentro de viewport
             left = Math.max(8, Math.min(window.innerWidth - v.offsetWidth - 8, left));
             top = Math.max(8, Math.min(window.innerHeight - v.offsetHeight - 8, top));
             v.style.left = left + "px";
@@ -318,9 +329,6 @@
         window.location.href = "../html/pacieCalendario.html";
     });
 
-    // ---------- iniciar signal al cargar para permitir recibir candidatos/answer si ya hay pc en psicólogo ----------
+    // iniciar signal para recibir candidates/answer si ya hay pc en psicólogo
     openSignalSocket();
-
-    // Si la cámara ya puede iniciar automáticamente (opcional), podrías descomentar esto:
-    // ensureLocalStream().catch(()=>{});
 })();
