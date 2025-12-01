@@ -1,340 +1,309 @@
-// room_psico.js (Perfect Negotiation - psicólogo, elegante y completo)
-(() => {
-    const SIGNAL_HOST = "ws://127.0.0.1:8000";
-    const PREDICT_HOST = "ws://127.0.0.1:8000";
-    const API_HOST = "http://127.0.0.1:8000";
+// room_psico.js
+(async function () {
 
-    const sessionId = localStorage.getItem("real_session_id");
-    const token = localStorage.getItem("token");
+const SIGNAL_HOST = "ws://127.0.0.1:8000";
+const PREDICT_HOST = "ws://127.0.0.1:8000";
+const API_HOST = "http://127.0.0.1:8000";
 
-    if (!sessionId || !token) {
-        alert("❌ No hay sesión iniciada.");
-        window.location.href = "../html/psicoReuniones.html";
-        return;
-    }
+const sessionId = localStorage.getItem("real_session_id");
+const token = localStorage.getItem("token");
+let tracksAdded = false;
 
-    document.getElementById("sessionInfo").textContent = `Sesión #${sessionId}`;
+if (!sessionId || !token) {
+    alert("❌ No hay sesión iniciada");
+    location.href = "../html/psicoReuniones.html";
+    return;
+}
 
-    const localVideo = document.getElementById("localVideo");
-    const remoteVideo = document.getElementById("remoteVideo");
-    const btnCam = document.getElementById("btnCam");
-    const btnMic = document.getElementById("btnMic");
-    const btnHangup = document.getElementById("btnHangup");
-    const emotionCountsEl = document.getElementById("emotionCounts");
-    const alertOverlay = document.getElementById("alertOverlay");
-    const notesEl = document.getElementById("notes");
+fetch(`${API_HOST}/users/me`, {
+    headers: { Authorization: `Bearer ${token}` }
+})
+.then(res => res.json())
+.then(user => {
+    r_profesional.value = `${user.first_name} ${user.last_name}`;
+    r_licencia.value = user.licencia_profesional || "No registrada";
+});
 
-    let pc = null;
-    let signalSocket = null;
-    let predictSocket = null;
-    let localStream = null;
-    let micEnabled = true;
-    let tracksAdded = false;
+// DOM inputs (asegurarse que existan en el HTML)
+const r_motivo = document.getElementById("r_motivo");
+const r_antecedentes = document.getElementById("r_antecedentes");
+const r_evolucion = document.getElementById("r_evolucion");
+const r_estado = document.getElementById("r_estado");
+const r_afecto = document.getElementById("r_afecto");
+const r_conducta = document.getElementById("r_conducta");
+const r_insight = document.getElementById("r_insight");
+const r_tecnicas = document.getElementById("r_tecnicas");
+const r_analisis = document.getElementById("r_analisis");
+const r_pronostico = document.getElementById("r_pronostico");
+const r_recomendaciones = document.getElementById("r_recomendaciones");
+const r_notas_adicionales = document.getElementById("r_notas_adicionales");
+const r_profesional = document.getElementById("r_profesional");
+const r_licencia = document.getElementById("r_licencia");
+const r_riesgo_suicida = document.getElementById("r_riesgo_suicida");
+const r_riesgo_autolesion = document.getElementById("r_riesgo_autolesion");
+const r_riesgo_otros = document.getElementById("r_riesgo_otros");
+const r_objetivos = document.getElementById("r_objetivos");
+const r_tareas = document.getElementById("r_tareas");
+const r_ajustes = document.getElementById("r_ajustes");
+const r_temas = document.getElementById("r_temas");
+const r_actividades = document.getElementById("r_actividades");
+const r_proxima_sesion = document.getElementById("r_proxima_sesion");
 
-    let makingOffer = false;
-    let ignoreOffer = false;
-    const polite = true;
+const localVideo = document.getElementById("localVideo");
+const remoteVideo = document.getElementById("remoteVideo");
+const btnCam = document.getElementById("btnCam");
+const btnMic = document.getElementById("btnMic");
+const btnHangup = document.getElementById("btnHangup");
+const btnGuardar = document.getElementById("btnGuardarReporte");
+const btnCancelar = document.getElementById("btnCancelarReporte");
+const emotionCountsEl = document.getElementById("emotionCounts");
 
-    const emotionStats = {};
-    const recentPred = [];
-    let lastAlertEmotion = null;
+let pc = null;
+let signalSocket = null;
+let predictSocket = null;
+let localStream = null;
+let micEnabled = true;
+let sendInterval = null;
 
-    const PERSIST_SECONDS = 8;
-    const PERSIST_COUNT = 4;
+const emotionStats = {};
+let chart = null;
 
-    const ICE = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+const ICE = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-    // 🎨 COLORES DEL GRÁFICO (elegantes)
-    const emotionColors = {
-        happy: "#3ECF8E",
-        sad: "#5C7AEA",
-        angry: "#FF6B6B",
-        disgust: "#C3E88D",
-        fear: "#9E6EF3",
-        neutral: "#A1AAB3",
-        surprise: "#FFD54F"
-    };
+const emotionColors = {
+    happy: "#3ECF8E", sad: "#5C7AEA", angry: "#FF6B6B",
+    disgust: "#C3E88D", fear: "#9E6EF3", neutral: "#A1AAB3", surprise: "#FFD54F"
+};
 
-    let chart = null;
-    const chartLabels = [];
-    const chartData = [];
-    const chartColors = [];
+function createChart() {
+    const ctx = document.getElementById("emotionChart").getContext("2d");
+    chart = new Chart(ctx, {
+        type: "bar",
+        data: { labels: [], datasets: [{ data: [], backgroundColor: [] }] },
+        options: { responsive: true, scales: { y: { beginAtZero: true } } }
+    });
+}
 
-    function createChart() {
-        const ctx = document.getElementById("emotionChart").getContext("2d");
+function refreshChart() {
+    const labels = Object.keys(emotionStats);
+    const data = Object.values(emotionStats);
+    const colors = labels.map(e => emotionColors[e] || "#aaa");
 
-        chart = new Chart(ctx, {
-            type: "bar",
-            data: {
-                labels: chartLabels,
-                datasets: [{
-                    label: "Conteo",
-                    data: chartData,
-                    backgroundColor: chartColors,
-                    borderRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                animation: { duration: 350 },
-                scales: {
-                    y: { beginAtZero: true },
-                    x: { ticks: { color: "#fff" } }
-                },
-                plugins: {
-                    legend: { labels: { color: "#eee" } }
-                }
-            }
-        });
-    }
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = data;
+    chart.data.datasets[0].backgroundColor = colors;
+    chart.update();
 
-    function refreshChartFromStats() {
-        const entries = Object.entries(emotionStats).sort((a, b) => b[1] - a[1]);
+    emotionCountsEl.innerHTML = labels.map(e => `<b>${e}</b>: ${emotionStats[e]}`).join(" · ");
+}
 
-        chartLabels.length = 0;
-        chartData.length = 0;
-        chartColors.length = 0;
+function openSignalSocket() {
+    const url = `${SIGNAL_HOST}/ws/signal/${sessionId}?token=${encodeURIComponent(token)}`;
+    signalSocket = new WebSocket(url);
 
-        for (const [emotion, count] of entries) {
-            chartLabels.push(emotion);
-            chartData.push(count);
-            chartColors.push(emotionColors[emotion] || "#aaa");
-        }
-
-        if (chart) chart.update();
-    }
-
-    // 🔵 WebSocket estable con reconexión
-    function createWebSocket(url, name, onOpen, onMessage, onClose, onError) {
-        let ws = null;
-        let attempts = 0;
-
-        function connect() {
-            attempts++;
-            try {
-                ws = new WebSocket(url);
-            } catch (e) {
-                scheduleReconnect();
-                return;
-            }
-
-            ws.onopen = () => {
-                attempts = 0;
-                if (onOpen) onOpen();
-            };
-            ws.onmessage = (e) => onMessage?.(e);
-            ws.onclose = () => { onClose?.(); scheduleReconnect(); };
-            ws.onerror = (e) => onError?.(e);
-        }
-
-        function scheduleReconnect() {
-            const delay = Math.min(15000, attempts * 1500);
-            setTimeout(connect, delay);
-        }
-
-        connect();
-
-        return {
-            get raw() { return ws; },
-            close() { ws?.close(); }
-        };
-    }
-
-    function openSignalSocket() {
-        const url = `${SIGNAL_HOST}/ws/signal/${sessionId}?token=${encodeURIComponent(token)}`;
-
-        signalSocket = createWebSocket(
-            url,
-            "Signal",
-            () => console.log("Signal abierto"),
-            async (ev) => {
-                try {
-                    const msg = JSON.parse(ev.data);
-                    await handleSignalMessage(msg);
-                } catch (e) {}
-            }
-        );
-    }
-
-    // 📡 Manejo de signaling (Perfect Negotiation)
-    async function handleSignalMessage(msg) {
+    signalSocket.onopen = () => console.log("Signal open (psico)");
+    signalSocket.onmessage = async (e) => {
+        const msg = JSON.parse(e.data);
         if (!pc) await createPeerConnection();
 
         if (msg.type === "offer") {
-            const collision = makingOffer || pc.signalingState !== "stable";
-            ignoreOffer = !polite && collision;
-
-            if (ignoreOffer) return;
-
-            try {
-                await pc.setRemoteDescription(msg);
-                const answer = await pc.createAnswer();
-                await pc.setLocalDescription(answer);
-                sendSignal(pc.localDescription);
-            } catch (err) { }
-        }
-
-        if (msg.type === "answer") {
             await pc.setRemoteDescription(msg);
-        }
-
-        if (msg.type === "candidate" && msg.candidate) {
-            try { await pc.addIceCandidate(msg.candidate); }
-            catch { }
-        }
-    }
-
-    function sendSignal(msg) {
-        signalSocket?.raw?.send(JSON.stringify(msg));
-    }
-
-    // 🔵 WebRTC
-    async function createPeerConnection() {
-        if (pc) return;
-
-        pc = new RTCPeerConnection(ICE);
-
-        pc.ontrack = (ev) => {
-            remoteVideo.srcObject = ev.streams[0];
-        };
-
-        pc.onicecandidate = (ev) => {
-            if (ev.candidate) sendSignal({ type: "candidate", candidate: ev.candidate });
-        };
-
-        pc.onnegotiationneeded = async () => {
-            try {
-                makingOffer = true;
-                if (localStream) {
-                    const offer = await pc.createOffer();
-                    await pc.setLocalDescription(offer);
-                    sendSignal(pc.localDescription);
-                }
-            } finally {
-                makingOffer = false;
-            }
-        };
-
-        if (localStream && !tracksAdded) {
-            localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
-            tracksAdded = true;
-        }
-    }
-
-    // 🎥 Cámara
-    async function toggleCam() {
-        if (!localStream) {
-            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            localVideo.srcObject = localStream;
-
-            await createPeerConnection();
-
-            localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
-            tracksAdded = true;
-
-            openPredictSocket();
-            btnCam.classList.add("on");
-        } else {
-            localStream.getTracks().forEach(t => t.stop());
-            localVideo.srcObject = null;
-            localStream = null;
-            btnCam.classList.remove("on");
-        }
-    }
-
-    // 🎤 Micrófono
-    function toggleMic() {
-        if (!localStream) return;
-
-        micEnabled = !micEnabled;
-        localStream.getAudioTracks().forEach(t => t.enabled = micEnabled);
-
-        btnMic.innerHTML = micEnabled
-            ? '<i class="fa-solid fa-microphone"></i>'
-            : '<i class="fa-solid fa-microphone-slash"></i>';
-    }
-
-    // 🔮 SOCKET DE PREDICCIÓN
-    function openPredictSocket() {
-        const url = `${PREDICT_HOST}/ws/predict/${sessionId}?token=${encodeURIComponent(token)}`;
-
-        predictSocket = createWebSocket(
-            url,
-            "Predict",
-            () => {},
-            (ev) => {
-                try {
-                    const data = JSON.parse(ev.data);
-                    if (data.type === "prediction") handlePrediction(data);
-                } catch {}
-            }
-        );
-    }
-
-    function handlePrediction(pred) {
-        const now = Date.now();
-        emotionStats[pred.emotion] = (emotionStats[pred.emotion] || 0) + 1;
-
-        recentPred.push({ emotion: pred.emotion, t: now });
-
-        const cutoff = now - PERSIST_SECONDS * 1000;
-        while (recentPred.length && recentPred[0].t < cutoff) recentPred.shift();
-
-        const same = recentPred.filter(p => p.emotion === pred.emotion).length;
-
-        if (same >= PERSIST_COUNT && lastAlertEmotion !== pred.emotion) {
-            showAlert(pred.emotion);
-            lastAlertEmotion = pred.emotion;
-            recentPred.length = 0;
-        }
-
-        updateEmotionUI();
-        refreshChartFromStats();
-    }
-
-    function showAlert(e) {
-        alertOverlay.style.display = "flex";
-        alertOverlay.querySelector(".alert-box").textContent = `⚠️ Emoción persistente: ${e}`;
-        setTimeout(() => alertOverlay.style.display = "none", 6000);
-    }
-
-    function updateEmotionUI() {
-        emotionCountsEl.innerHTML = Object.entries(emotionStats)
-            .map(([e, v]) => `<b>${e}</b>: ${v}`)
-            .join(" · ");
-    }
-
-    // 📄 Finalizar sesión → Reporte PDF
-    async function endSessionAndGenerateReport() {
-        const notes = notesEl.value;
-
-        const res = await fetch(`${API_HOST}/reports/generate`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-            },
-            body: JSON.stringify({ session_id: Number(sessionId), notes })
-        });
-
-        if (!res.ok) {
-            alert("Error generando reporte");
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            sendSignal(pc.localDescription);
             return;
         }
 
-        const blob = await res.blob();
-        window.open(URL.createObjectURL(blob), "_blank");
+        if (msg.type === "answer") await pc.setRemoteDescription(msg);
+        if (msg.type === "candidate" && msg.candidate) await pc.addIceCandidate(msg.candidate);
+    };
+}
 
-        window.location.href = "../html/psicoReuniones.html";
+function sendSignal(obj) {
+    try { signalSocket.send(JSON.stringify(obj)); } catch (e) {}
+}
+
+async function createPeerConnection() {
+    if (pc) return;
+    pc = new RTCPeerConnection(ICE);
+
+    pc.ontrack = ev => remoteVideo.srcObject = ev.streams[0];
+
+    pc.onicecandidate = ev => {
+        if (ev.candidate) sendSignal({ type: "candidate", candidate: ev.candidate });
+    };
+
+    pc.onnegotiationneeded = async () => {
+        try {
+            if (!localStream) return;
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+            sendSignal(pc.localDescription);
+        } catch (e) { console.warn("negotiationneeded error", e); }
+    };
+
+    // si ya hay localStream agregar tracks (solo una vez)
+    if (localStream && !tracksAdded) {
+        localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+        tracksAdded = true;
+    }
+}
+
+async function toggleCam() {
+    if (!localStream) {
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        localVideo.srcObject = localStream;
+
+        await createPeerConnection();
+
+        if (!tracksAdded) {
+            localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+            tracksAdded = true;
+        }
+
+        // forzamos oferta para que el patient reciba tu video inmediatamente
+        try {
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+            sendSignal(pc.localDescription);
+        } catch (e) { console.warn("offer after addTrack failed", e); }
+
+        openPredictSocket();
+        startSendingFrames();
+        btnCam.classList.add("on");
+        return;
     }
 
-    // 🎛️ Botones
-    btnHangup.addEventListener("click", endSessionAndGenerateReport);
-    btnCam.addEventListener("click", toggleCam);
-    btnMic.addEventListener("click", toggleMic);
+    localStream.getTracks().forEach(t => t.stop());
+    localVideo.srcObject = null;
+    localStream = null;
+    clearInterval(sendInterval);
+    tracksAdded = false;
+    btnCam.classList.remove("on");
+}
 
-    // Inicializar
-    createChart();
-    openSignalSocket();
-    openPredictSocket();
+function toggleMic() {
+    if (!localStream) return;
+    micEnabled = !micEnabled;
+    localStream.getAudioTracks().forEach(t => t.enabled = micEnabled);
+    btnMic.innerHTML = micEnabled ? '<i class="fa-solid fa-microphone"></i>' : '<i class="fa-solid fa-microphone-slash"></i>';
+}
+
+function openPredictSocket() {
+    const url = `${PREDICT_HOST}/ws/predict/${sessionId}?token=${encodeURIComponent(token)}`;
+    predictSocket = new WebSocket(url);
+
+    predictSocket.onmessage = ev => {
+        try {
+            const data = JSON.parse(ev.data);
+            if (data.type === "prediction") {
+                const e = (data.emotion || "neutral").toLowerCase();
+                emotionStats[e] = (emotionStats[e] || 0) + 1;
+                refreshChart();
+            }
+        } catch (e) {}
+    };
+}
+
+function startSendingFrames() {
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    sendInterval = setInterval(() => {
+        if (!predictSocket || predictSocket.readyState !== 1) return;
+        if (!remoteVideo || !remoteVideo.videoWidth) return;
+
+        canvas.width = remoteVideo.videoWidth;
+        canvas.height = remoteVideo.videoHeight;
+        ctx.drawImage(remoteVideo, 0, 0, canvas.width, canvas.height);
+        const frame = canvas.toDataURL("image/jpeg", 0.7);
+
+        try { predictSocket.send(JSON.stringify({ type: "frame", data: frame })); } catch (e) {}
+    }, 1200);
+}
+
+/* ------------------
+    REPORTE
+   ------------------ */
+btnHangup.onclick = () => document.getElementById("reportModal").style.display = "flex";
+btnCancelar.onclick = () => document.getElementById("reportModal").style.display = "none";
+
+btnGuardar.onclick = async () => {
+    // validar patient_id
+    const patient_id = Number(localStorage.getItem("patient_id"));
+    if (!patient_id) {
+        alert("❌ patient_id no definido en localStorage.");
+        return;
+    }
+
+    const payload = {
+        session_id: Number(sessionId),
+        patient_id: patient_id,
+
+        motivo_consulta: r_motivo.value,
+        antecedentes: r_antecedentes.value,
+        evolucion: r_evolucion.value,
+
+        estado_animo: r_estado.value,
+        afecto: r_afecto.value,
+        conducta: r_conducta.value,
+        insight: r_insight.value,
+        pruebas_aplicadas: r_pruebas.value,
+
+        temas_tratados: r_temas.value,
+        tecnicas_aplicadas: r_tecnicas.value,
+        actividades: r_actividades.value,
+
+        analisis_clinico: r_analisis.value,
+        riesgo_suicida: r_riesgo_suicida.checked,
+        riesgo_autolesion: r_riesgo_autolesion.checked,
+        riesgo_otros: r_riesgo_otros.checked,
+
+        objetivos: r_objetivos.value,
+        tareas: r_tareas.value,
+        ajustes_tratamiento: r_ajustes.value,
+
+        pronostico: r_pronostico.value,
+        proxima_sesion: r_proxima_sesion.value || null,
+        recomendaciones_previas: r_recomendaciones.value,
+        notas_adicionales: r_notas_adicionales.value,
+
+        nombre_profesional: r_profesional.value,
+        licencia_profesional: r_licencia.value,
+
+        emociones_detectadas: JSON.stringify(emotionStats)
+    };
+
+    try {
+        const res = await fetch(`${API_HOST}/psychologist/sessions/${sessionId}/report`, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (res.ok) {
+            alert("✅ Reporte guardado correctamente");
+            location.href = "../html/psicoReuniones.html";
+            return;
+        }
+
+        // leer body de error para depuración
+        const text = await res.text();
+        console.error("Error saving report:", res.status, text);
+        alert("❌ Error al guardar: " + (text || res.status));
+    } catch (err) {
+        console.error("Fetch error:", err);
+        alert("❌ Error de red al guardar reporte: " + err.message);
+    }
+};
+
+// INIT
+createChart();
+openSignalSocket();
+
+btnCam.onclick = toggleCam;
+btnMic.onclick = toggleMic;
 })();

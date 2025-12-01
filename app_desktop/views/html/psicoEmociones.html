@@ -1,4 +1,4 @@
-#app_desktop\views\html\psicoEmociones.html
+<!app_desktop\views\html\psicoEmociones.html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -75,31 +75,11 @@
             <h4>Reportes del Paciente</h4>
 
             <div class="reporte-opciones">
+              <select id="selectorReportes" style="padding:6px;border-radius:6px;">
+                <option value="">Seleccione un reporte</option>
+              </select>
+
               <button id="btnDescargarReporte" class="btn-guardar">📄 Descargar Reporte</button>
-              <button id="btnMostrarNuevoReporte" class="btn-guardar">➕ Nuevo Reporte</button>
-            </div>
-
-            <!-- Formulario para nuevo reporte -->
-            <div id="nuevoReporteForm" style="display:none; margin-top:15px;">
-              <label for="motivo">Motivo:</label>
-              <input type="text" id="motivo" placeholder="Motivo de la sesión o reporte" />
-
-              <label for="tecnica">Técnica o instrumentos utilizados:</label>
-              <input type="text" id="tecnica" placeholder="Ejemplo: Terapia cognitivo-conductual" />
-
-              <label for="observaciones">Observaciones conductuales:</label>
-              <textarea id="observaciones" rows="3"></textarea>
-
-              <label for="resultados">Resultados e interpretación:</label>
-              <textarea id="resultados" rows="3"></textarea>
-
-              <label for="conclusiones">Conclusiones:</label>
-              <textarea id="conclusiones" rows="3"></textarea>
-
-              <label for="recomendaciones">Recomendaciones:</label>
-              <textarea id="recomendaciones" rows="3"></textarea>
-
-              <button id="btnGuardarReporte" class="btn-guardar">Guardar Reporte</button>
             </div>
           </div>
         </div>

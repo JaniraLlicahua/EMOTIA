@@ -244,9 +244,14 @@ def predict_from_bytes(frame_bytes: bytes):
 
 SESSION_CLIENTS: dict[int, set] = {}
 
-
+# Reemplaza la función ws_predict por esta versión (backend/main.py)
 @app.websocket("/ws/predict/{session_id}")
 async def ws_predict(websocket: WebSocket, session_id: int):
+    """
+    Recibe frames (base64) vía websocket, predice emoción y:
+        - retransmite la predicción a los clientes conectados a la sesión
+        - guarda la detección en la BD (Detection) asociada a la session -> appointment -> paciente/psicólogo si existe
+    """
     try:
         await websocket.accept()
     except:
@@ -267,20 +272,72 @@ async def ws_predict(websocket: WebSocket, session_id: int):
                 break
 
             if data.get("type") == "frame":
-                b64 = data.get("data").split(",")[-1]
-                frame_bytes = base64.b64decode(b64)
+                # extraer base64 y predecir
+                b64 = data.get("data", "").split(",")[-1]
+                if not b64:
+                    continue
+                try:
+                    frame_bytes = base64.b64decode(b64)
+                except Exception:
+                    continue
 
                 pred = predict_from_bytes(frame_bytes)
-                if pred:
-                    payload = {"type": "prediction", **pred}
-                    for client in list(SESSION_CLIENTS.get(sid, [])):
-                        try:
-                            await client.send_json(payload)
-                        except:
-                            SESSION_CLIENTS[sid].discard(client)
+                if not pred:
+                    continue
+
+                # Enviar predicción a los clientes conectados de la sesión
+                payload = {"type": "prediction", **pred}
+
+                # Guardado en BD (intento seguro; no bloquear el loop)
+                try:
+                    db = SessionLocal()
+                    try:
+                        # intentar obtener la sesión y sus participantes
+                        session_obj = db.query(SessionModel).filter(SessionModel.id == sid).first()
+                        patient_id = None
+                        psychologist_id = None
+                        if session_obj and session_obj.appointment:
+                            patient_id = getattr(session_obj.appointment, "patient_id", None)
+                            psychologist_id = getattr(session_obj.appointment, "psychologist_id", None)
+
+                        # crear registro de Detection (image_name generado)
+                        image_name = f"ws_frame_s{sid}_{datetime.utcnow().strftime('%Y%m%d%H%M%S%f')}"
+                        det = Detection(
+                            session_id = sid,
+                            patient_id = patient_id,
+                            psychologist_id = psychologist_id,
+                            image_name = image_name,
+                            emotion = str(pred.get("emotion") or ""),
+                            confidence = float(pred.get("confidence") or 0.0),
+                        )
+                        db.add(det)
+                        db.commit()
+                        db.refresh(det)
+                        # si quieres, añadimos el id de la detección al payload
+                        payload["detection_id"] = det.id
+                    finally:
+                        db.close()
+                except Exception as e:
+                    # no queremos romper la conexión por un fallo de BD; loguear
+                    print("Error guardando Detection:", e)
+
+                # retransmitir a clientes
+                for client in list(SESSION_CLIENTS.get(sid, [])):
+                    try:
+                        await client.send_json(payload)
+                    except Exception:
+                        SESSION_CLIENTS[sid].discard(client)
 
     except WebSocketDisconnect:
         SESSION_CLIENTS[sid].discard(websocket)
+    except Exception as e:
+        # limpieza en caso de error inesperado
+        SESSION_CLIENTS[sid].discard(websocket)
+        print("Error ws_predict:", e)
+        try:
+            await websocket.close()
+        except:
+            pass
 
 # Señalización WebSocket simple (relay)
 SIGNAL_CLIENTS: dict[int, set] = {}

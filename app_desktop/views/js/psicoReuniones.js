@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // ===============================
     async function loadPatients() {
         try {
-            const res = await fetch(`${API_URL}/psychologist/patients`, {
+            const res = await fetch(`${API_URL}/patients`, {
                 headers: { "Authorization": `Bearer ${token}` }
             });
 
@@ -133,7 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const grouped = { Lunes: [], Martes: [], Miércoles: [], Jueves: [], Viernes: [] };
 
         data.forEach(m => {
-            const dt = new Date(m.date);
+            const dt = new Date(`${m.date}T${m.time}`);
             const idx = dt.getDay(); // 0..6
             const name = idx === 0 ? null : daysOfWeek[idx - 1]; // domingo -> null
             if (name && grouped[name]) grouped[name].push(m);
@@ -180,7 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const data = await res.json();
 
             localStorage.setItem("real_session_id", data.session_id);
-
+            localStorage.setItem("patient_id", m.patient_id); // <-- importante
             window.location.href = `../html/room_psico.html?session_id=${data.session_id}&token=${token}`;
         };
 

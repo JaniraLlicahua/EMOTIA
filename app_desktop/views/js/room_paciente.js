@@ -1,6 +1,5 @@
 // room_paciente.js 
 (() => {
-
     const SIGNAL_HOST = "ws://127.0.0.1:8000";
     const PREDICT_HOST = "ws://127.0.0.1:8000";
 
@@ -25,23 +24,31 @@
     let localStream = null;
     let micEnabled = true;
     let sendInterval = null;
+    let tracksAdded = false;
 
-    /** PERFECT NEGOTIATION **/
     let makingOffer = false;
     let ignoreOffer = false;
-    const polite = true;        // 🔥 Paciente debe ser POLITE
+    const polite = true;
 
     const ICE = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
-    /** WebSocket con reconexión **/
     function createWebSocket(url, onOpen, onMessage) {
         let ws = null;
+        let attempts = 0;
 
         const connect = () => {
-            ws = new WebSocket(url);
-            ws.onopen = () => onOpen?.();
+            attempts++;
+            try {
+                ws = new WebSocket(url);
+            } catch (err) {
+                setTimeout(connect, Math.min(15000, attempts * 1000));
+                return;
+            }
+
+            ws.onopen = () => { attempts = 0; onOpen?.(); };
             ws.onmessage = (ev) => onMessage?.(JSON.parse(ev.data));
-            ws.onclose = () => setTimeout(connect, 1500);
+            ws.onclose = () => setTimeout(connect, Math.min(15000, attempts * 1000));
+            ws.onerror = () => ws.close();
         };
         connect();
 
@@ -53,17 +60,15 @@
 
     function openSignalSocket() {
         const url = `${SIGNAL_HOST}/ws/signal/${sessionId}?token=${encodeURIComponent(token)}`;
-        signalSocket = createWebSocket(url, null, handleSignalMessage);
+        signalSocket = createWebSocket(url, () => console.log("Signal connected"), handleSignalMessage);
     }
 
     function sendSignal(msg) {
-        signalSocket?.raw?.send(JSON.stringify(msg));
+        try { signalSocket?.raw?.send(JSON.stringify(msg)); } catch (e) {}
     }
 
-    /** WebRTC principal **/
     async function createPeerConnection() {
         if (pc) return;
-
         pc = new RTCPeerConnection(ICE);
 
         pc.ontrack = (ev) => {
@@ -71,38 +76,26 @@
         };
 
         pc.onicecandidate = (ev) => {
-            if (ev.candidate)
-                sendSignal({ type: "candidate", candidate: ev.candidate });
+            if (ev.candidate) sendSignal({ type: "candidate", candidate: ev.candidate });
         };
 
         pc.onnegotiationneeded = async () => {
             try {
                 makingOffer = true;
                 if (!localStream) return;
-
                 const offer = await pc.createOffer();
                 await pc.setLocalDescription(offer);
                 sendSignal(pc.localDescription);
-
             } finally {
                 makingOffer = false;
             }
         };
-
-        // 🔥 IMPORTANTE: addTrack solo una vez
-        if (localStream) {
-            localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
-        }
     }
 
-
-    /** Perfect Negotiation — señales */
     async function handleSignalMessage(msg) {
-
         if (!pc) await createPeerConnection();
 
         if (msg.type === "offer") {
-
             const collision = makingOffer || pc.signalingState !== "stable";
             ignoreOffer = !polite && collision;
             if (ignoreOffer) return;
@@ -111,52 +104,61 @@
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
             sendSignal(pc.localDescription);
+            return;
         }
 
         if (msg.type === "answer") {
             await pc.setRemoteDescription(msg);
+            return;
         }
 
-        if (msg.type === "candidate") {
-            await pc.addIceCandidate(msg.candidate);
+        if (msg.type === "candidate" && msg.candidate) {
+            try { await pc.addIceCandidate(msg.candidate); } catch (e) {}
         }
     }
 
-    // 🔥 Activar cámara (arreglado)
     async function toggleCamera() {
-
         if (!localStream) {
             localStream = await navigator.mediaDevices.getUserMedia({
-                video: { width: 800, height: 600 },   // 🔥 video nítido
+                video: { width: 800, height: 600 },
                 audio: true
             });
 
             localVideo.srcObject = localStream;
 
-            // Primer y ÚNICO addTrack
             await createPeerConnection();
 
-            localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+            if (!tracksAdded) {
+                // addTrack SOLO si pc ya existe (creado arriba)
+                localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+                tracksAdded = true;
+            }
 
-            makeLocalVideoFloating();
+            // Forzar negociación si ya hay un remote (asegura que el otro reciba tu video)
+            try {
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                sendSignal(pc.localDescription);
+            } catch (e) { console.warn("negotiation error", e); }
+
+            openPredictSocket();
             startSendingFrames();
-
+            makeLocalVideoFloating();
             btnCam.innerHTML = "Desactivar cámara";
             return;
         }
 
-        // ❌ Apagar cámara
+        // apagar
         localStream.getTracks().forEach(t => t.stop());
         localStream = null;
         localVideo.srcObject = null;
 
         clearInterval(sendInterval);
         predictSocket?.close();
+        tracksAdded = false;
         btnCam.innerHTML = "Activar cámara";
     }
 
-
-    /** Micrófono */
     function toggleMic() {
         if (!localStream) return;
         micEnabled = !micEnabled;
@@ -164,33 +166,36 @@
         btnMic.innerHTML = micEnabled ? "Mic OFF" : "Mic ON";
     }
 
-
-    /** Enviar frames IA */
-    function startSendingFrames() {
-
+    function openPredictSocket() {
         const url = `${PREDICT_HOST}/ws/predict/${sessionId}?token=${encodeURIComponent(token)}`;
-        predictSocket = createWebSocket(url);
+        predictSocket = new WebSocket(url);
+        predictSocket.onopen = () => console.log("Predict socket open");
+        predictSocket.onmessage = (ev) => {
+            // optional: handle messages coming back from predict server (if any)
+            // console.log("predict:", ev.data);
+        };
+        predictSocket.onclose = () => console.log("Predict closed");
+    }
 
+    function startSendingFrames() {
         const canvas = document.createElement("canvas");
-        canvas.width = 320;
-        canvas.height = 240;
         const ctx = canvas.getContext("2d");
 
         sendInterval = setInterval(() => {
-            if (!localStream) return;
+            if (!predictSocket || predictSocket.readyState !== 1) return;
+            if (!localVideo || !localVideo.videoWidth) return;
 
+            canvas.width = localVideo.videoWidth;
+            canvas.height = localVideo.videoHeight;
             ctx.drawImage(localVideo, 0, 0, canvas.width, canvas.height);
+            const frame = canvas.toDataURL("image/jpeg", 0.6);
 
-            predictSocket.raw.send(JSON.stringify({
-                type: "frame",
-                data: canvas.toDataURL("image/jpeg", 0.6)
-            }));
-
+            try {
+                predictSocket.send(JSON.stringify({ type: "frame", data: frame }));
+            } catch (e) {}
         }, 900);
     }
 
-
-    /** Pequeña ventana flotante */
     function makeLocalVideoFloating() {
         Object.assign(localVideo.style, {
             position: "fixed",
@@ -202,13 +207,10 @@
             border: "2px solid white",
             zIndex: 9999,
             background: "#000",
-            objectFit: "cover",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.25)"
+            objectFit: "cover"
         });
     }
 
-
-    /** Salir */
     btnExit.onclick = () => {
         localStream?.getTracks().forEach(t => t.stop());
         pc?.close();
@@ -216,7 +218,6 @@
         predictSocket?.close();
         window.location.href = "../html/pacieCalendario.html";
     };
-
 
     btnCam.onclick = toggleCamera;
     btnMic.onclick = toggleMic;

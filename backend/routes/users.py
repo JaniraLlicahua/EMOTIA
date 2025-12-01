@@ -35,3 +35,18 @@ def get_user(user_id: int, db: Session = Depends(get_db), current_user: User = D
         "role": user.role,
         "created_at": user.created_at.isoformat() if user.created_at else None,
     }
+
+@router.get("")
+def list_users_by_role(role: str, db: Session = Depends(get_db)):
+    if role != "psychologist":
+        return []
+
+    users = db.query(User).filter(User.role == "psychologist").all()
+
+    return [
+        {
+            "id": u.id,
+            "full_name": f"{u.first_name} {u.last_name}",
+            "email": u.email
+        } for u in users
+    ]

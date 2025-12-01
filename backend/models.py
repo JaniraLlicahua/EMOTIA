@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Float
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, Float, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from .database import Base
@@ -122,16 +122,64 @@ class Report(Base):
     __tablename__ = "reports"
 
     id = Column(Integer, primary_key=True, index=True)
-    patient_id = Column(Integer, ForeignKey("users.id"))
-    psychologist_id = Column(Integer, ForeignKey("users.id"))
-    motivo = Column(String(255))
-    tecnica = Column(String(255))
-    observaciones = Column(Text)
-    resultados = Column(Text)
-    conclusiones = Column(Text)
-    recomendaciones = Column(Text)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
+    # Relaciones principales
+    session_id = Column(Integer, ForeignKey("sessions.id"), nullable=False)
+    patient_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    psychologist_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    # 1. Datos identificativos
+    fecha_sesion = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    numero_sesion = Column(Integer)
+
+    # 2. Motivo de consulta
+    motivo_consulta = Column(Text)
+
+    # 3. Antecedentes
+    antecedentes = Column(Text)
+
+    # 4. Evolución
+    evolucion = Column(Text)
+
+    # 5. Observaciones clínicas
+    estado_animo = Column(String(100))
+    afecto = Column(String(100))
+    conducta = Column(String(100))
+    insight = Column(String(100))
+    pruebas_aplicadas = Column(Text)
+
+    # 6. Contenido de la sesión
+    temas_tratados = Column(Text)
+    tecnicas_aplicadas = Column(Text)
+    actividades = Column(Text)
+
+    # 7. Análisis clínico
+    analisis_clinico = Column(Text)
+    riesgo_suicida = Column(Boolean, default=False)
+    riesgo_autolesion = Column(Boolean, default=False)
+    riesgo_otros = Column(Boolean, default=False)
+
+    # 8. Plan de intervención
+    objetivos = Column(Text)
+    tareas = Column(Text)
+    ajustes_tratamiento = Column(Text)
+
+    # 9. Pronóstico
+    pronostico = Column(Text)
+
+    # 10. Próxima sesión
+    proxima_sesion = Column(DateTime)
+    recomendaciones_previas = Column(Text)
+    notas_adicionales = Column(Text)
+
+    # 11. Firma profesional
+    nombre_profesional = Column(String(150))
+    licencia_profesional = Column(String(100))
+
+    # Emociones detectadas por IA
+    emociones_detectadas = Column(Text)
+
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 # =============================
 # 😊 DETECCIONES IA

@@ -44,6 +44,84 @@
     </aside>
 </div>
 
+<div id="reportModal" class="report-modal" style="display:none;">
+    <div class="report-box">
+        <h3>🧾 Reporte Clínico Completo</h3>
+
+        <label>Motivo de consulta</label>
+        <textarea id="r_motivo"></textarea>
+
+        <label>Antecedentes</label>
+        <textarea id="r_antecedentes"></textarea>
+
+        <label>Evolución</label>
+        <textarea id="r_evolucion"></textarea>
+
+        <label>Estado de ánimo</label>
+        <input id="r_estado">
+
+        <label>Afecto</label>
+        <input id="r_afecto">
+
+        <label>Conducta</label>
+        <input id="r_conducta">
+
+        <label>Insight</label>
+        <input id="r_insight">
+
+        <label>Pruebas aplicadas</label>
+        <textarea id="r_pruebas"></textarea>
+
+        <label>Temas tratados</label>
+        <textarea id="r_temas"></textarea>
+
+        <label>Técnicas aplicadas</label>
+        <textarea id="r_tecnicas"></textarea>
+
+        <label>Actividades</label>
+        <textarea id="r_actividades"></textarea>
+
+        <label>Análisis clínico</label>
+        <textarea id="r_analisis"></textarea>
+
+        <label><input type="checkbox" id="r_riesgo_suicida"> Riesgo suicida</label>
+        <label><input type="checkbox" id="r_riesgo_autolesion"> Autolesión</label>
+        <label><input type="checkbox" id="r_riesgo_otros"> Riesgo a otros</label>
+
+        <label>Objetivos</label>
+        <textarea id="r_objetivos"></textarea>
+
+        <label>Tareas</label>
+        <textarea id="r_tareas"></textarea>
+
+        <label>Ajustes del tratamiento</label>
+        <textarea id="r_ajustes"></textarea>
+
+        <label>Pronóstico</label>
+        <textarea id="r_pronostico"></textarea>
+
+        <label>Próxima sesión</label>
+        <input type="date" id="r_proxima_sesion">
+
+        <label>Recomendaciones</label>
+        <textarea id="r_recomendaciones"></textarea>
+
+        <label>Notas adicionales</label>
+        <textarea id="r_notas_adicionales"></textarea>
+
+        <label>Psicólogo</label>
+        <input id="r_profesional" readonly>
+
+        <label>Licencia</label>
+        <input id="r_licencia" readonly>
+
+        <div class="report-actions">
+        <button id="btnGuardarReporte">Guardar Reporte</button>
+        <button id="btnCancelarReporte">Cancelar</button>
+        </div>
+    </div>
+</div>
+
 <div class="footer">Emotia — Videollamada con IA de Emociones</div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
