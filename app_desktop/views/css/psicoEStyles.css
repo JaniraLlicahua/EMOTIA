@@ -1,3 +1,4 @@
+/*app_desktop\views\css\psicoEStyles.css*/
 /* ======= BASE ======= */
 * {
   margin: 0;
@@ -209,48 +210,68 @@ body {
   margin-bottom: 1.2rem;
 }
 
+/* ===========================
+   EMOCIONES COLORES Y TARJETAS
+   (diseño limpio como ejemplo)
+   =========================== */
 .emociones-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 1.2rem;
-  margin-bottom: 1.5rem;
+  gap: 14px;
+  margin-top: 8px;
 }
 
+/* tarjeta */
 .emocion {
+  color: #fff;
+  padding: 16px;
+  border-radius: 14px;
   text-align: center;
-  background: #f8f8f8;
-  border-radius: 12px;
-  padding: 1rem;
-  transition: 0.3s;
+  font-weight: 600;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.12);
+  transition: transform .18s ease, box-shadow .18s ease;
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
+/* levanta al hover */
 .emocion:hover {
-  transform: scale(1.05);
+  transform: translateY(-6px);
+  box-shadow: 0 14px 30px rgba(0,0,0,0.18);
 }
 
-.emocion i {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
+/* emoji / icon */
+.emocion h3 {
+  font-size: 34px;
+  margin-bottom: 6px;
+  line-height: 1;
 }
 
+/* texto */
 .emocion p {
-  font-weight: 500;
-  margin-bottom: 0.3rem;
+  font-size: 15px;
+  margin: 0;
+  text-transform: capitalize;
+  opacity: 0.95;
 }
 
 .emocion span {
-  font-size: 1rem;
-  font-weight: 600;
+  display: block;
+  font-size: 14px;
+  opacity: 0.95;
+  margin-top: 6px;
 }
 
-/* Colores de emociones */
-.happy i { color: #f9c74f; }
-.sad i { color: #577590; }
-.angry i { color: #d62828; }
-.neutral i { color: #90be6d; }
-.fear i { color: #ff9f1c; }
-.disgust i { color: #9b5de5; }
-.surprise i { color: #4361ee; }
+/* ===== COLORES POR EMOCIÓN (fondo) ===== */
+.emocion.feliz    { background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%); }
+.emocion.triste   { background: linear-gradient(135deg, #2196f3 0%, #42a5f5 100%); }
+.emocion.enojo    { background: linear-gradient(135deg, #f44336 0%, #ff6b6b 100%); }
+.emocion.miedo    { background: linear-gradient(135deg, #8e44ad 0%, #9c27b0 100%); }
+.emocion.sorpresa { background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%); }
+.emocion.asco     { background: linear-gradient(135deg, #6d4c41 0%, #8d6e63 100%); }
+.emocion.neutral  { background: linear-gradient(135deg, #607d8b 0%, #78909c 100%); }
 
 /* ======= REPORTES ======= */
 .reporte-form {
@@ -324,5 +345,9 @@ body {
   }
   .main {
     padding: 1rem;
+  }
+
+  .emociones-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

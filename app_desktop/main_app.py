@@ -2,46 +2,79 @@
 import sys
 import os
 
-# Habilitar flags de chromium para WebEngine (mejora soporte getUserMedia)
-# Nota: si pones '--use-fake-ui-for-media-stream' te saltas el permiso de UI (solo para tests).
-os.environ.setdefault('QTWEBENGINE_CHROMIUM_FLAGS',
-                        '--enable-usermedia --enable-media-stream')
+# Habilitar flags de chromium para WebEngine
+os.environ.setdefault(
+    'QTWEBENGINE_CHROMIUM_FLAGS',
+    '--enable-usermedia --enable-media-stream'
+)
 
 from PyQt5.QtCore import QUrl, QObject, pyqtSignal, pyqtSlot
 from PyQt5.QtWidgets import QApplication, QMainWindow, QMessageBox
-from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineSettings, QWebEngineProfile, QWebEnginePage
+from PyQt5.QtWebEngineWidgets import (
+    QWebEngineView,
+    QWebEngineSettings,
+    QWebEngineProfile,
+    QWebEnginePage
+)
 from PyQt5.QtWebChannel import QWebChannel
+from PyQt5.QtGui import QIcon   # ✅ IMPORTANTE PARA EL ÍCONO
 
+
+# ===================== BRIDGE =====================
 class Bridge(QObject):
-    loginSuccess = pyqtSignal(str, str, int)
+    loginSuccess = pyqtSignal(str, str, int, str)
 
-    @pyqtSlot(str, str, int)
-    def onLoginSuccess(self, token, role, user_id):
-        print(f"✅ Bridge → Login exitoso | Rol: {role}, ID: {user_id}")
+    @pyqtSlot(str, str, int, str)
+    def onLoginSuccess(self, token, role, user_id, full_name):
+        print("✅ Bridge recibió:")
+        print("  token:", token)
+        print("  role:", role)
+        print("  user_id:", user_id)
+        print("  full_name:", full_name)
+
         js_store = f"""
             localStorage.setItem('token', '{token}');
             localStorage.setItem('role', '{role}');
             localStorage.setItem('user_id', '{user_id}');
+            localStorage.setItem('full_name', '{full_name}');
         """
-        # Ejecuta JS para guardar token y demás
+
         try:
             self.parent().web_view.page().runJavaScript(js_store)
         except Exception as e:
             print("Error ejecutando JS desde Bridge:", e)
-        self.loginSuccess.emit(token, role, user_id)
 
+        self.loginSuccess.emit(token, role, user_id, full_name)
+
+# ===================== VENTANA PRINCIPAL =====================
 class WebWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+
+        # ✅ RUTA REAL DE TU LOGO
+        icon_path = os.path.join(
+            os.path.dirname(__file__),
+            "views",
+            "pictures",
+            "Logo Emotia.png"
+        )
+
+        # ✅ APLICAR ICONO A LA VENTANA
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
+            print("✅ Ícono cargado correctamente")
+        else:
+            print("❌ No se encontró el ícono en:", icon_path)
+
         self.setWindowTitle("EMOTIA")
         self.setGeometry(200, 100, 1280, 720)
 
-        # Forzar perfil persistente para evitar problemas de cache en entornos Windows con permisos
+        # Perfil persistente
         profile = QWebEngineProfile.defaultProfile()
         profile.setPersistentCookiesPolicy(QWebEngineProfile.ForcePersistentCookies)
-        # (opcional) ajustar carpeta cache si tienes problemas de permiso:
-        # profile.setCachePath("C:/temp/emotia_cache")
-        # profile.setPersistentStoragePath("C:/temp/emotia_storage")
+
+        # Descargas
+        profile.downloadRequested.connect(self.handle_download)
 
         self.web_view = QWebEngineView(self)
         self.bridge = Bridge()
@@ -51,17 +84,17 @@ class WebWindow(QMainWindow):
         self.web_view.settings().setAttribute(QWebEngineSettings.PluginsEnabled, True)
         self.web_view.settings().setAttribute(QWebEngineSettings.JavascriptEnabled, True)
         self.web_view.settings().setAttribute(QWebEngineSettings.FullScreenSupportEnabled, True)
-        # Activar WebRTC-related attribute si está disponible
+
         try:
-            self.web_view.settings().setAttribute(QWebEngineSettings.WebAttribute( QWebEngineSettings.WebRTCPublicInterfacesEnabled ), True)
+            self.web_view.settings().setAttribute(
+                QWebEngineSettings.WebRTCPublicInterfacesEnabled, True
+            )
         except Exception:
-            # Algunas versiones no exponen ese atributo; no romper si no existe.
             pass
 
-        # Conectar petición de permisos (cámara/micrófono)
         self.web_view.page().featurePermissionRequested.connect(self.on_permission_request)
 
-        # Canal PyQt5 <-> JS
+        # WebChannel
         self.channel = QWebChannel()
         self.channel.registerObject("qtBridgeObj", self.bridge)
         self.web_view.page().setWebChannel(self.channel)
@@ -71,31 +104,48 @@ class WebWindow(QMainWindow):
         self.load_page("login.html")
 
         self.bridge.loginSuccess.connect(self.load_dashboard)
-        # imprimir consola JS en Python
         self.web_view.page().javaScriptConsoleMessage = self.handle_js_console
 
+
     def on_permission_request(self, security_origin, feature):
-        """
-        Permitir automáticamente cámara y micrófono.
-        security_origin: QUrl, feature: QWebEnginePage.Feature
-        """
         try:
-            # conceder permiso
-            self.web_view.page().setFeaturePermission(security_origin, feature, QWebEnginePage.PermissionGrantedByUser)
-            print(f"Permiso concedido para {feature} desde {security_origin.toString()}")
+            self.web_view.page().setFeaturePermission(
+                security_origin,
+                feature,
+                QWebEnginePage.PermissionGrantedByUser
+            )
         except Exception as e:
             print("Error al conceder permiso:", e)
+
 
     def handle_js_console(self, level, msg, line, sourceID):
         print(f"[JS] {msg}")
 
+
+    def handle_download(self, download):
+        download_path = os.path.join(os.path.expanduser("~"), "Downloads")
+        file_path = os.path.join(download_path, download.downloadFileName())
+
+        download.setPath(file_path)
+        download.accept()
+
+        print(f"✅ Archivo descargándose en: {file_path}")
+
+
     def load_page(self, filename):
-        html_path = os.path.join(os.path.dirname(__file__), "views", "html", filename)
+        html_path = os.path.join(
+            os.path.dirname(__file__),
+            "views",
+            "html",
+            filename
+        )
         abs_path = os.path.abspath(html_path)
         self.web_view.load(QUrl.fromLocalFile(abs_path))
         print(f"🌐 Cargando {filename}")
 
-    def load_dashboard(self, token, role, user_id):
+
+    def load_dashboard(self, token, role, user_id, full_name):
+
         if role == "admin":
             html = "adminPacientes.html"
         elif role == "psychologist":
@@ -106,20 +156,54 @@ class WebWindow(QMainWindow):
             html = "login.html"
 
         self.load_page(html)
-        QMessageBox.information(self, "Login correcto", f"Bienvenido ({role})")
+
+        # 🔒 Fallback seguro: si por alguna razón no llegó full_name
+        if not full_name:
+            def get_name_from_js(result):
+                name = result if result else "Usuario"
+                QMessageBox.information(
+                    self,
+                    "Login correcto",
+                    f"Bienvenido, {name}"
+                )
+
+            self.web_view.page().runJavaScript(
+                "localStorage.getItem('full_name');",
+                get_name_from_js
+            )
+        else:
+            QMessageBox.information(
+                self,
+                "Login correcto",
+                f"Bienvenido, {full_name}"
+            )
 
     def closeEvent(self, event):
         print("🧹 Cerrando aplicación y limpiando sesión...")
-        js_clear = "localStorage.clear();"
-        self.web_view.page().runJavaScript(js_clear)
+        self.web_view.page().runJavaScript("localStorage.clear();")
         event.accept()
 
+
+# ===================== APP =====================
 class EmotiaApp(QApplication):
     def __init__(self, args):
         super().__init__(args)
+
+        # ✅ TAMBIÉN SE DEFINE ICONO PARA LA APP (NOTIFICACIONES / BARRA)
+        icon_path = os.path.join(
+            os.path.dirname(__file__),
+            "views",
+            "pictures",
+            "Logo Emotia.png"
+        )
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
+
         self.window = WebWindow()
         self.window.show()
 
+
+# ===================== MAIN =====================
 if __name__ == "__main__":
     app = EmotiaApp(sys.argv)
     sys.exit(app.exec_())

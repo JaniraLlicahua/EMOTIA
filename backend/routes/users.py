@@ -32,6 +32,7 @@ def get_user(user_id: int, db: Session = Depends(get_db), current_user: User = D
         "address": getattr(user, "address", None),
         "photo_url": getattr(user, "photo_url", None),
         "status": user.status,
+        "license_number": user.license_number,
         "role": user.role,
         "created_at": user.created_at.isoformat() if user.created_at else None,
     }

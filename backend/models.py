@@ -30,6 +30,7 @@ class User(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     specialty = Column(String)
+    license_number = Column(String(100))
     assigned_to = Column(Integer, ForeignKey("users.id"), nullable=True)
 
     psychologist_patients = relationship(

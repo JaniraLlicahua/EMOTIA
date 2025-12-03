@@ -104,7 +104,12 @@ def login(payload: LoginPayload, db: Session = Depends(get_db)):
     if not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Contraseña incorrecta")
 
-    token = create_access_token({"sub": user.email, "role": user.role, "user_id": user.id})
+    token = create_access_token({
+        "sub": user.email,
+        "role": user.role,
+        "user_id": user.id,
+        "username": user.username
+    })
 
     return {
         "access_token": token,
@@ -112,6 +117,9 @@ def login(payload: LoginPayload, db: Session = Depends(get_db)):
         "role": user.role,
         "email": user.email,
         "username": user.username,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "full_name": f"{user.first_name or ''} {user.last_name or ''}".strip(),
         "user_id": user.id,
     }
 
@@ -435,25 +443,21 @@ async def ws_signal(websocket: WebSocket, session_id: int, token: str = Query(No
 # Importar routers (mantener como antes)
 from backend.routes import admin
 from backend.routes import admin_reports
-from backend.routes import psychologist_reports
 from backend.routes import psychologist
 from backend.routes import chat_ws, chat_rest
 from backend.routes import meetings
 from backend.routes import users
 from backend.routes import sessions
-from backend.routes import reports
 
 # 🟢 Montar los routers de la API PRIMERO
 app.include_router(admin.router)
 app.include_router(admin_reports.router)
-app.include_router(psychologist_reports.router)
 app.include_router(psychologist.router)
 app.include_router(chat_ws.router)
 app.include_router(chat_rest.router)
 app.include_router(meetings.router)
 app.include_router(users.router)
 app.include_router(sessions.router)
-app.include_router(reports.router)
 
 # 🟢 Servir la carpeta frontend bajo /static para evitar colisiones con la API
 FRONTEND_DIR = ROOT / "app_desktop" / "views"

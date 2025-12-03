@@ -1,4 +1,3 @@
-// app_desktop/views/js/psicoEmociones.js
 const API_URL = "http://127.0.0.1:8000";
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -9,14 +8,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     const panelReportes = document.getElementById("panelReportes");
     const listaNotas = document.getElementById("listaNotas");
 
-    const btnNuevoReporte = document.getElementById("btnNuevoReporte");
     const btnDescargarReporte = document.getElementById("btnDescargarReporte");
-
     const selectorReportes = document.getElementById("selectorReportes");
 
     const usernameEl = document.querySelector(".username");
     const avatarEl = document.querySelector(".avatar");
-    const userMenuIcon = document.querySelector(".user i.fa-caret-down");
 
     const token = localStorage.getItem("token");
     const userId = parseInt(localStorage.getItem("user_id") || "0");
@@ -27,9 +23,27 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
-    // =========================
+    // Emojis y mapa de colores (si necesitas usar color inline)
+    const EMOJI = {
+        feliz: "😄",
+        triste: "😢",
+        enojo: "😠",
+        miedo: "😨",
+        sorpresa: "😲",
+        asco: "🤢",
+        neutral: "😐",
+        // soporta nombres en inglés también
+        happy: "😄",
+        sad: "😢",
+        angry: "😠",
+        fear: "😨",
+        surprise: "😲",
+        disgust: "🤢"
+    };
+
+    // --------------------------
     // PERFIL USUARIO
-    // =========================
+    // --------------------------
     try {
         const res = await fetch(`${API_URL}/users/${userId}`, {
             headers: { Authorization: `Bearer ${token}` }
@@ -38,16 +52,16 @@ document.addEventListener("DOMContentLoaded", async () => {
             const user = await res.json();
             usernameEl.textContent = user.first_name
                 ? `${user.first_name} ${user.last_name || ""}`
-                : user.username;
+                : (user.username || "Usuario");
             if (user.photo_url) avatarEl.src = user.photo_url;
         }
     } catch (e) {
         console.warn("Error perfil:", e);
     }
 
-    // =========================
-    // ✅ CARGAR PACIENTES (MISMO ENDPOINT QUE psicoPacientes.js)
-    // =========================
+    // --------------------------
+    // CARGAR PACIENTES
+    // --------------------------
     async function loadPacientes() {
         try {
             const res = await fetch(`${API_URL}/chat/contacts/${userId}`, {
@@ -58,7 +72,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             const pacientes = await res.json();
             listaPacientes.innerHTML = "";
 
-            if (pacientes.length === 0) {
+            if (!Array.isArray(pacientes) || pacientes.length === 0) {
                 listaPacientes.innerHTML = "<li>No hay pacientes.</li>";
                 return;
             }
@@ -67,15 +81,16 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const li = document.createElement("li");
                 li.classList.add("paciente");
                 li.innerHTML = `
-                    <img src="../pictures/user.png">
+                    <img src="../pictures/user.png" alt="paciente">
                     <div>
                         <h4>${p.first_name || ""} ${p.last_name || ""}</h4>
-                        <span>${p.username}</span>
+                        <span>${p.username || ""}</span>
                     </div>
                 `;
-                li.addEventListener("click", () =>
-                    selectPaciente(p.id, `${p.first_name} ${p.last_name}`, li)
-                );
+                li.addEventListener("click", () => {
+                    const nombreCompleto = `${p.first_name || ""} ${p.last_name || ""}`.trim();
+                    selectPaciente(p.id, nombreCompleto || p.username, li);
+                });
                 listaPacientes.appendChild(li);
             });
 
@@ -87,9 +102,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     let selectedPatientId = null;
 
-    // =========================
+    // --------------------------
     // SELECCIONAR PACIENTE
-    // =========================
+    // --------------------------
     async function selectPaciente(id, nombre, liElement) {
         selectedPatientId = id;
 
@@ -100,61 +115,93 @@ document.addEventListener("DOMContentLoaded", async () => {
         panelReportes.style.display = "block";
         notasContainer.style.display = "block";
 
-        // -------- EMOCIONES --------
+        // Obtener emociones desde API
         try {
-            const res = await fetch(`${API_URL}/patients/${id}/emotions`, {
+            const res = await fetch(`${API_URL}/psychologist/patients/${id}/emotions`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
+            if (!res.ok) throw new Error("Error al obtener emociones");
             const data = await res.json();
 
             emocionesGrid.innerHTML = "";
-            const emociones = Object.entries(data.summary);
+            const emociones = Object.entries(data.summary || {});
 
             if (emociones.length === 0) {
-                emocionesGrid.innerHTML = "<p>No hay emociones registradas.</p>";
+                emocionesGrid.innerHTML = "<p style='grid-column:1/-1;text-align:center;color:#666;'>No hay emociones registradas.</p>";
                 return;
             }
 
-            emociones.forEach(([tipo, porcentaje]) => {
+            // Normaliza claves (si backend devuelve 'happy' u 'happy ' etc.)
+            emociones.forEach(([rawTipo, porcentaje]) => {
+                const tipo = String(rawTipo || "").trim().toLowerCase();
                 const div = document.createElement("div");
-                div.classList.add("emocion");
+
+                // asigna clase que coincide con CSS (.emocion.feliz / .emocion.triste / etc.)
+                // mapeo rápido: english -> spanish
+                const mapToSpanish = {
+                    happy: "feliz",
+                    sad: "triste",
+                    angry: "enojo",
+                    fear: "miedo",
+                    surprise: "sorpresa",
+                    disgust: "asco",
+                    neutral: "neutral"
+                };
+                const tipoES = mapToSpanish[tipo] || tipo;
+
+                div.className = `emocion ${tipoES}`;
+
+                const emoji = EMOJI[tipo] || EMOJI[tipoES] || "🙂";
+                const displayName = tipoES; // tu CSS hace text-transform:capitalize
+
                 div.innerHTML = `
-                    <p>${tipo}</p>
+                    <h3 aria-hidden="true">${emoji}</h3>
+                    <p>${displayName}</p>
                     <span>${porcentaje}%</span>
                 `;
+
                 emocionesGrid.appendChild(div);
             });
+
         } catch (err) {
             console.error(err);
             emocionesGrid.innerHTML = "<p style='color:red;'>Error emociones</p>";
         }
 
-        // -------- REPORTES --------
+        // Cargar reportes asociados
         await cargarReportes(id);
     }
 
-    // =========================
-    // ✅ CARGAR REPORTES Y LLENAR SELECTOR
-    // =========================
+    // --------------------------
+    // CARGAR REPORTES Y LLENAR SELECTOR
+    // --------------------------
     async function cargarReportes(id) {
         try {
-            const res = await fetch(`${API_URL}/patients/${id}/reports`, {
+            const res = await fetch(`${API_URL}/psychologist/patients/${id}/reports`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
+            if (!res.ok) throw new Error("Error reportes");
             const reportes = await res.json();
 
             listaNotas.innerHTML = "";
-            selectorReportes.innerHTML = `<option value="">Seleccione reporte</option>`;
+            if (selectorReportes) selectorReportes.innerHTML = `<option value="">Seleccione reporte</option>`;
+
+            if (!Array.isArray(reportes) || reportes.length === 0) {
+                if (listaNotas) listaNotas.innerHTML = "<p>No hay reportes.</p>";
+                return;
+            }
 
             reportes.forEach(r => {
                 const div = document.createElement("div");
-                div.innerHTML = `<strong>${r.motivo}</strong><br>${r.observaciones}`;
+                div.innerHTML = `<strong>${r.motivo || "Reporte"}</strong><br>${r.observaciones || ""}`;
                 listaNotas.appendChild(div);
 
-                const opt = document.createElement("option");
-                opt.value = r.motivo;
-                opt.textContent = r.motivo;
-                selectorReportes.appendChild(opt);
+                if (selectorReportes) {
+                    const opt = document.createElement("option");
+                    opt.value = r.id;
+                    opt.textContent = r.motivo || `Reporte ${r.id}`;
+                    selectorReportes.appendChild(opt);
+                }
             });
 
         } catch (err) {
@@ -162,24 +209,37 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
-    // =========================
-    // ✅ DESCARGAR DESDE SELECTOR
-    // =========================
-    btnDescargarReporte.addEventListener("click", () => {
-        const motivo = selectorReportes.value;
-        if (!motivo || !selectedPatientId) {
-            alert("Seleccione un reporte");
-            return;
-        }
+    // --------------------------
+    // DESCARGAR REPORTE (BOTÓN)
+    // --------------------------
+    if (btnDescargarReporte) {
+        btnDescargarReporte.addEventListener("click", () => {
+            const reportId = selectorReportes ? selectorReportes.value : null;
 
-        window.open(
-            `${API_URL}/patients/${selectedPatientId}/reports/${encodeURIComponent(motivo)}/download`,
-            "_blank"
-        );
-    });
+            if (!reportId || !selectedPatientId) {
+                alert("⚠️ Seleccione un reporte primero");
+                return;
+            }
 
-    // =========================
+            const url = `${API_URL}/psychologist/patients/${selectedPatientId}/reports/${reportId}/download`;
+
+            // crear enlace para forzar descarga (funciona en PyQt WebEngine)
+            const a = document.createElement("a");
+            a.href = url;
+            a.setAttribute("download", `reporte_${reportId}.pdf`);
+            document.body.appendChild(a);
+
+            // click y cleanup
+            a.click();
+            document.body.removeChild(a);
+
+            // alerta al usuario (ligeramente retardada para dar tiempo al navegador)
+            setTimeout(() => {
+                alert("✅ El reporte se descargó correctamente");
+            }, 600);
+        });
+    }
+
     // INICIAR
-    // =========================
     loadPacientes();
 });
